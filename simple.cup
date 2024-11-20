@@ -1,0 +1,125 @@
+/**********************************************************************
+ Java CUP specification for a parser for Simple programs
+ **********************************************************************/
+
+import java_cup.runtime.*;
+
+parser code {:
+   public void report_error(String message, Object info) {
+        int line = 0;
+        int column = 0;
+        StringBuilder m = new StringBuilder("");
+        if (info instanceof java_cup.runtime.Symbol) {
+            java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
+            String tokenName = sym.terminalNames[s.sym];
+            // Special case EOF token program
+            if (s.sym != sym.EOF) {
+            line = ((TokenVal) s.value).linenum;
+            column = ((TokenVal) s.value).charnum;
+            }
+            m.append(" : " + message + " - Token: " + tokenName + " value " + s.value);
+        }
+        Errors.fatal(line, column, m.toString());
+    }
+:};
+
+
+
+/* Terminals (tokens returned by the scanner) */
+terminal TokenVal       PUBLIC;
+terminal TokenVal       CLASS;
+terminal TokenVal       STATIC;
+terminal TokenVal       INT;
+terminal TokenVal       BOOLEAN;
+terminal TokenVal       STRING;
+terminal TokenVal       VOID;
+terminal TokenVal       TRUE;
+terminal TokenVal       FALSE;
+terminal TokenVal       IF;
+terminal TokenVal       ELSE;
+terminal TokenVal       WHILE;
+terminal TokenVal 	DO;
+terminal TokenVal       PRINT;
+terminal TokenVal       RETURN;
+terminal IdTokenVal     ID;
+terminal IntLitTokenVal INTLITERAL;
+terminal StrLitTokenVal STRINGLITERAL;
+terminal TokenVal       LCURLY;
+terminal TokenVal       RCURLY;
+terminal TokenVal       LPAREN;
+terminal TokenVal       RPAREN;
+terminal TokenVal       COMMA;
+terminal TokenVal       ASSIGN;
+terminal TokenVal       SEMICOLON;
+terminal TokenVal       PLUS;
+terminal TokenVal       MINUS;
+terminal TokenVal       TIMES;
+terminal TokenVal       DIVIDE;
+terminal TokenVal       NOT;
+terminal TokenVal       AND;
+terminal TokenVal       OR;
+terminal TokenVal       EQUALS;
+terminal TokenVal       NOTEQUALS;
+terminal TokenVal       LESS;
+terminal TokenVal       GREATER;
+terminal TokenVal       LESSEQ;
+terminal TokenVal       GREATEREQ;
+
+/* Non-terminals
+ *
+ * NOTE: You will need to add more nonterminals to this list as you
+ *       add productions to the grammar below.
+ */
+non terminal ProgramNode      program;
+non terminal ClassBodyNode    classBody;
+non terminal Sequence         declList;
+non terminal DeclNode	      decl;
+non terminal FieldDeclNode    fieldDecl;
+non terminal TypeNode	      type;
+non terminal IdNode	      id;
+ 
+start with program;
+
+/*
+ * grammar with actions
+ *
+ * add more here
+ */
+program		::= PUBLIC CLASS id:i LCURLY classBody:c RCURLY
+		{: RESULT = new ProgramNode(i, c);
+		:}
+		;
+
+classBody	::= declList:d
+		{: RESULT = new ClassBodyNode(new DeclListNode(d));
+		:}
+		;
+
+declList 	::= declList:dl decl:d
+		{: dl.addToEnd(d);
+		   RESULT = dl;
+		:}
+		| /* epsilon */
+		{: RESULT = new Sequence();
+		:}
+		;
+
+decl		::= fieldDecl:v
+		{: RESULT = v;
+		:}
+		;
+
+fieldDecl	::= STATIC type:t id:i SEMICOLON
+		{: RESULT = new FieldDeclNode(t, i);
+		:}
+		;
+
+type		::= INT
+		{: RESULT = new IntNode();
+		:}
+		;
+
+id              ::= ID:i
+		{: RESULT = new IdNode(i.linenum, i.charnum, i.idVal);
+		:}
+		;
