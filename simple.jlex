@@ -29,10 +29,15 @@ class IntLitTokenVal extends TokenVal {
     }
 }
 
-// THIS IS NECESSARY FOR THE PARSER TO COMPILE
+class StringTokenVal extends TokenVal {
+	//class for String values that need to be safed
+	String stringVal;
+	StringTokenVal(int l, int c, String val) {
+		super(l,c);
+		stringVal = val;
+	}
+}
 
-
-// Provided class to represent identifiers
 class IdTokenVal extends TokenVal {
     String idVal;
     IdTokenVal(int l, int c, String str) {
@@ -40,8 +45,6 @@ class IdTokenVal extends TokenVal {
         idVal = str;
     }
 }
-// 
-
 
 
 // The following class is used to keep track of the character number at which
@@ -50,9 +53,16 @@ class CharNum {
   static int num=1;
 }
 %%
-
 DIGIT=		[0-9]
-WHITESPACE=	[\ \t\n]
+INT=		{DIGIT}
+WHITESPACE=	[\ \t]
+NEWLINE= [\r|\n|\r\n]
+RESERVED_WORDS= String|System.out.println|boolean|class|do|else|false|if|int|public|return|static|true|void|while|case|switch|default
+IDENTIFIER= [a-zA-Z][a-zA-Z0-9_]*
+STRING_LITERAL= \"([^\\\"\n]|\\[ntr\"\\])*\" 
+COMMENT_SINGLE_LINE= \/\/.*
+SYMBOLS= \{|\}|\(|\)|,|=|;|\+|-|\*\*|\*|\/|\!|&&|\|\||==|\!=|>|<|<=|>=|:
+
 
 // The next 3 lines are included so that we can use the generated scanner
 // with java CUP (the Java parser generator)
@@ -67,27 +77,131 @@ return new Symbol(sym.EOF);
 
 // Turn on line counting
 %line
+%init{
+	yybegin( NORMAL );
+%init}
+%state NORMAL COMMENT STRING
 
 %%
+<NORMAL> {
 
-{DIGIT}+   {// NOTE: the following computation of the integer value does NOT
-	    //       check for overflow.  This must be changed.
-	    int val = Integer.parseInt(yytext());
-	    Symbol S = new Symbol(sym.INTLITERAL,
-			          new IntLitTokenVal(yyline+1, CharNum.num, val)
-				 );
-	    CharNum.num += yytext().length();
-	    return S;
-	   }
+"/*"	{ yybegin( COMMENT );}
+// removed -? to avoid ambiguity with the minus operator 
+{INT}+   {
+	    try {
+        int parsedInt = Integer.parseInt(yytext());
+        Symbol S = new Symbol(sym.INTLITERAL,
+                              new IntLitTokenVal(yyline+1, CharNum.num, parsedInt));
+        CharNum.num += yytext().length();
+        return S;
+    } catch (NumberFormatException e) {
+        Errors.fatal(yyline+1, CharNum.num,
+                     "Overflow! INTEGER TO LARGE - YOU HAVE TO COMPLY TO THE STANDARDS! THIS IS YOUR VERY BAD NUMBER: " + yytext());
+        CharNum.num += yytext().length();
+    }
+	}
 
 {WHITESPACE}+  {CharNum.num += yytext().length();}
 
-"+"	   {Symbol S = new Symbol(sym.PLUS, new TokenVal(yyline+1, CharNum.num));
-	    CharNum.num++;
-	    return S;
-	   }
+{NEWLINE} {CharNum.num = 1;}
+
+{RESERVED_WORDS} {
+	try{
+	String reserved_word = yytext();
+	int symb;
+	switch(reserved_word) {
+		case "String": symb = sym.STRING; break;
+		case "System.out.println": symb = sym.PRINT; break;
+		case "boolean": symb = sym.BOOLEAN; break;
+		case "class": symb = sym.CLASS; break;
+		case "do": symb = sym.DO; break;
+		case "else": symb = sym.ELSE; break;
+		case "false": symb = sym.FALSE; break;
+		case "if": symb = sym.IF; break;
+		case "int": symb = sym.INT; break;
+		case "public": symb = sym.PUBLIC; break;
+		case "return": symb = sym.RETURN; break;
+		case "static": symb = sym.STATIC; break;
+		case "true": symb = sym.TRUE; break;
+		case "void": symb = sym.VOID; break;
+		case "while": symb = sym.WHILE; break;
+		case "case": symb = sym.CASE; break;
+		case "switch": symb = sym.SWITCH; break;
+		case "default": symb = sym.DEFAULT; break;
+		default: throw new IllegalStateException("Illegal Reserved Word");
+	}
+	Symbol S = new Symbol(symb, new TokenVal(yyline+1, CharNum.num));
+	CharNum.num += yytext().length();
+	return S;
+	} catch (IllegalStateException e) {
+		Errors.fatal(yyline+1, CharNum.num, "Illegal Reserved Word");
+	}
+}
+{COMMENT_SINGLE_LINE} {
+	CharNum.num = 1;
+}
+
+{IDENTIFIER}	{
+		Symbol S = new Symbol(sym.ID, new IdTokenVal(yyline+1, CharNum.num, yytext()));
+		CharNum.num += yytext().length();
+		return S;
+	}
+{STRING_LITERAL} {
+	//String literal = yytext().substring(1, yytext().length() - 1);
+	String literal = yytext();
+	literal = literal.replace("\\n", "\n");
+	literal = literal.replace("\\t", "\t");
+	literal = literal.replace("\\r", "\r");
+	Symbol S = new Symbol(sym.STRINGLITERAL, new StringTokenVal(yyline+1, CharNum.num, literal));
+	CharNum.num = yytext().length();
+	return S;
+}
+
+{SYMBOLS} {
+	try{
+	String symbol = yytext();
+	int symb; //aaaaahhh should have thought about naming when doing the reserved words, no keeping it for continuity
+	switch(symbol) {
+		case "{": symb = sym.LCURLY;break;
+		case "}": symb = sym.RCURLY;break;
+		case "(": symb = sym.LPAREN;break;
+		case ")": symb = sym.RPAREN;break;
+		case ":": symb = sym.COLON;break;
+		case ",": symb = sym.COMMA; break;
+		case "=": symb = sym.ASSIGN; break;
+		case ";": symb = sym.SEMICOLON; break;
+		case "+": symb = sym.PLUS; break;
+		case "-": symb = sym.MINUS; break;
+		case "**": symb = sym.POWER; break;
+		case "*": symb = sym.TIMES; break;
+		case "/": symb = sym.DIVIDE; break;
+		case "!": symb = sym.NOT; break;
+		case "&&": symb = sym.AND; break;
+		case "||": symb = sym.OR; break;
+		case "==": symb = sym.EQUALS; break;
+		case "!=": symb = sym.NOTEQUALS; break;
+		case "<": symb = sym.LESS;break;
+		case ">": symb = sym.GREATER; break;
+		case "<=": symb = sym.LESSEQ; break;
+		case ">=": symb = sym.GREATEREQ; break;
+		default: throw new IllegalStateException("Illegal Symbol!");
+	}
+	Symbol S = new Symbol(symb, new TokenVal(yyline+1, CharNum.num));
+	CharNum.num += yytext().length();
+	return S;
+	} catch (IllegalStateException e){
+		Errors.fatal(yyline+1, CharNum.num, "Illegal Symbol!");
+	}	
+}
+
 	    
 .	   {Errors.fatal(yyline+1, CharNum.num,
 			 "ignoring illegal character: " + yytext());
 	    CharNum.num++;
 	   }
+}
+<COMMENT> {
+	"*/" { yybegin( NORMAL );}
+	{NEWLINE} {}
+	.	{}
+}

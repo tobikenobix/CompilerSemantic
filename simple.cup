@@ -1,28 +1,27 @@
 /**********************************************************************
  Java CUP specification for a parser for Simple programs
  **********************************************************************/
-
+//this is the correct version
 import java_cup.runtime.*;
 
 parser code {:
-   public void report_error(String message, Object info) {
-        int line = 0;
-        int column = 0;
-        StringBuilder m = new StringBuilder("");
-        if (info instanceof java_cup.runtime.Symbol) {
-            java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
-            String tokenName = sym.terminalNames[s.sym];
-            // Special case EOF token program
-            if (s.sym != sym.EOF) {
-            line = ((TokenVal) s.value).linenum;
-            column = ((TokenVal) s.value).charnum;
-            }
-            m.append(" : " + message + " - Token: " + tokenName + " value " + s.value);
-        }
-        Errors.fatal(line, column, m.toString());
-    }
+public void report_error(String message, Object info) {
+	int line = 0;
+	int column = 0;
+	StringBuilder m = new StringBuilder("");
+	if (info instanceof java_cup.runtime.Symbol) {
+		java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
+		String tokenName = sym.terminalNames[s.sym];
+		// Special case EOF token program
+		if (s.sym != sym.EOF) {
+			line = ((TokenVal) s.value).linenum;
+			column = ((TokenVal) s.value).charnum;
+		}
+		m.append(" : " + message + " - Token: " + tokenName + " value " + s.value);
+	}
+	Errors.fatal(line, column, m.toString());
+	}
 :};
-
 
 
 /* Terminals (tokens returned by the scanner) */
@@ -38,12 +37,12 @@ terminal TokenVal       FALSE;
 terminal TokenVal       IF;
 terminal TokenVal       ELSE;
 terminal TokenVal       WHILE;
-terminal TokenVal 	DO;
+terminal TokenVal 		DO;
 terminal TokenVal       PRINT;
 terminal TokenVal       RETURN;
 terminal IdTokenVal     ID;
 terminal IntLitTokenVal INTLITERAL;
-terminal StrLitTokenVal STRINGLITERAL;
+terminal StringTokenVal STRINGLITERAL;
 terminal TokenVal       LCURLY;
 terminal TokenVal       RCURLY;
 terminal TokenVal       LPAREN;
@@ -64,6 +63,12 @@ terminal TokenVal       LESS;
 terminal TokenVal       GREATER;
 terminal TokenVal       LESSEQ;
 terminal TokenVal       GREATEREQ;
+terminal TokenVal	    SWITCH;
+terminal TokenVal	    CASE;
+terminal TokenVal	    DEFAULT;
+terminal TokenVal	    UMINUS;
+terminal TokenVal 	  	POWER;
+terminal TokenVal		COLON;
 
 /* Non-terminals
  *
@@ -77,7 +82,28 @@ non terminal DeclNode	      decl;
 non terminal FieldDeclNode    fieldDecl;
 non terminal TypeNode	      type;
 non terminal IdNode	      id;
+non terminal MethodDeclNode   methodDecl;
+non terminal FormalsListNode  formals;
+non terminal FormalDeclNode 	  formalDecl;
+non terminal Sequence		  formalsList;
+non terminal MethodBodyNode   methodBody;
+non terminal Sequence		  varDeclList;
+non terminal VarDeclNode	  varDecl;
+non terminal Sequence	  stmtList;
+non terminal StmtNode			stmt;
+non terminal ExpNode			exp;
+non terminal Sequence	  actualList;
+non terminal SwitchLabelNode  switchLabel;
+non terminal SwitchGroupNode  switchGroup;
+non terminal Sequence		  switchGroupList;
  
+/* Precedences */
+precedence left AND, OR;
+precedence nonassoc EQUALS, NOTEQUALS, LESS, GREATER, LESSEQ, GREATEREQ;
+precedence left PLUS, MINUS;
+precedence left TIMES, DIVIDE;
+precedence right NOT, POWER, UMINUS;
+
 start with program;
 
 /*
@@ -107,6 +133,9 @@ declList 	::= declList:dl decl:d
 decl		::= fieldDecl:v
 		{: RESULT = v;
 		:}
+		| methodDecl:m
+		{: RESULT = m;
+		:}
 		;
 
 fieldDecl	::= STATIC type:t id:i SEMICOLON
@@ -114,8 +143,214 @@ fieldDecl	::= STATIC type:t id:i SEMICOLON
 		:}
 		;
 
+ methodDecl ::= PUBLIC STATIC VOID id:i formals:f methodBody:mb 
+		{: RESULT = new MethodDeclNode(i, f, mb);
+		:}
+		| PUBLIC STATIC INT id:i formals:f methodBody:mb
+		{: RESULT = new MethodDeclNodeInt(i, f, mb);
+		:}
+		;
+
+formals ::= LPAREN RPAREN
+		{: RESULT = new FormalsListNode(new Sequence());
+		:}
+		| LPAREN formalsList:fl RPAREN
+		{: RESULT = new FormalsListNode(fl);
+		:}
+		;
+
+formalsList ::= formalDecl:fd
+              {: Sequence seq = new Sequence();
+			  	seq.addToEnd(fd);
+				RESULT = seq; 
+              :}
+              | formalDecl:fd COMMA formalsList:fl
+              {: fl.addToFront(fd); 
+			  	RESULT = fl;
+              :}
+              ;
+
+formalDecl ::= type:t id:i
+             {: RESULT = new FormalDeclNode(t, i); 
+             :}
+             ;
+
+methodBody ::= LCURLY  varDeclList:vdl stmtList:sl RCURLY
+		{: RESULT = new MethodBodyNode(new DeclListNode(vdl), new StmtListNode(sl));
+		:}
+		;
+
+varDeclList ::= varDeclList:vdl varDecl:vd
+		{: vdl.addToEnd(vd);
+		   RESULT = vdl;
+		:}
+		| /* epsilon */
+		{: RESULT = new Sequence();
+		:}
+		;
+
+varDecl ::= type:t id:i SEMICOLON
+		{: RESULT = new VarDeclNode(t, i);
+		:}
+		;
+
+stmtList ::= stmtList:sl stmt:s
+		{: sl.addToEnd(s);
+		   RESULT = sl;
+		:}
+		| /* epsilon */
+		{: RESULT = new Sequence();
+		:}
+		;
+
+switchGroupList ::= switchGroupList:sl switchGroup:sg
+		{: sl.addToEnd(sg);
+		   RESULT = sl;
+		:}
+		| /* epsilon */
+		{: RESULT = new Sequence();
+		:}
+		;
+
+switchGroup ::= switchLabel:sl stmtList:sl2
+		{: RESULT = new SwitchGroupNode(sl, new StmtListNode(sl2));
+		:}
+		;
+
+switchLabel ::= CASE exp:e COLON
+		{: RESULT = new SwitchLabelNodeCase(e);
+		:}
+		| DEFAULT COLON
+		{: RESULT = new SwitchLabelNodeDefault();
+		:}
+		;
+
+stmt ::= PRINT LPAREN exp:e RPAREN SEMICOLON
+		{: RESULT = new PrintStmtNode(e);
+		:}
+		| id:i ASSIGN exp:e SEMICOLON
+		{: RESULT = new AssignStmtNode(i, e);
+		:}
+		| IF LPAREN exp:e RPAREN LCURLY stmtList:sl RCURLY
+		{: RESULT = new IfStmtNode(e, new StmtListNode(sl));
+		:}
+		| IF LPAREN exp:e RPAREN LCURLY stmtList:sl RCURLY ELSE LCURLY stmtList:sl2 RCURLY
+		{: RESULT = new IfElseStmtNode(e, new StmtListNode(sl), new StmtListNode(sl2));
+		:}
+		| DO LCURLY stmtList:sl RCURLY WHILE LPAREN exp:e RPAREN
+		{: RESULT = new WhileStmtNode(e, new StmtListNode(sl));
+		:}
+		| RETURN SEMICOLON
+		{: RESULT = new ReturnStmtNode();
+		:}
+		| RETURN exp:e SEMICOLON
+		{: RESULT = new ReturnWithValueNode(e);
+		:}
+		| id:i LPAREN RPAREN SEMICOLON
+		{: RESULT = new CallStmtNode(i);
+		:}
+		| id:i LPAREN actualList:al RPAREN SEMICOLON
+		{: RESULT = new CallStmtNode(i, new ExpListNode(al));
+		:}
+		| LCURLY varDeclList:vdl stmtList:sl RCURLY
+		{: RESULT = new BlockStmtNode(new DeclListNode(vdl), new StmtListNode(sl));
+		:}
+		| SWITCH LPAREN exp:e RPAREN LCURLY switchGroupList:sg RCURLY
+		{: RESULT = new SwitchStmtNode(e, new SwitchGroupListNode(sg));
+		:}
+		;
+
+exp ::= exp:e PLUS exp:e2
+		{: RESULT = new PlusNode(e, e2);
+		:}
+		| exp:e MINUS exp:e2
+		{: RESULT = new MinusNode(e, e2);
+		:}
+		| exp:e TIMES exp:e2
+		{: RESULT = new TimesNode(e, e2);
+		:}
+		| exp:e DIVIDE exp:e2
+		{: RESULT = new DivideNode(e, e2);
+		:}
+		| NOT exp:e
+		{: RESULT = new NotNode(e);
+		:} 
+		| exp:e AND exp:e2
+		{: RESULT = new AndNode(e, e2);
+		:}
+		| exp:e OR exp:e2
+		{: RESULT = new OrNode(e, e2);
+		:}
+		| exp:e EQUALS exp:e2
+		{: RESULT = new EqualsNode(e, e2);
+		:}
+		| exp:e NOTEQUALS exp:e2
+		{: RESULT = new NotEqualsNode(e, e2);
+		:}
+		| exp:e LESS exp:e2
+		{: RESULT = new LessNode(e, e2);
+		:}
+		| exp:e GREATER exp:e2
+		{: RESULT = new GreaterNode(e, e2);
+		:}
+		| exp:e LESSEQ exp:e2
+		{: RESULT = new LessEqNode(e, e2);
+		:}
+		| exp:e GREATEREQ exp:e2
+		{: RESULT = new GreaterEqNode(e, e2);
+		:}
+		| exp:e POWER exp:e2
+		{: RESULT = new PowerNode(e, e2);
+		:}
+		| MINUS exp:e
+		{: RESULT = new UnaryMinusNode(e);
+		:} %prec UMINUS
+		| ID:i 
+		{: RESULT = new IdNode(i.linenum, i.charnum, i.idVal);
+		:}
+		| INTLITERAL:il
+		{: RESULT = new IntLitNode(il.linenum, il.charnum, il.intVal);
+		:}
+		| STRINGLITERAL:sl
+		{: RESULT = new StringLitNode(sl.linenum, sl.charnum, sl.stringVal);
+		:}
+		| TRUE:t
+		{: RESULT = new TrueNode(t.linenum, t.charnum);
+		:}
+		| FALSE:f
+		{: RESULT = new FalseNode(f.linenum, f.charnum);
+		:}
+		| LPAREN exp:e RPAREN
+		{: RESULT = e;
+		:}
+		| id:i LPAREN RPAREN
+		{: RESULT = new CallExpNode(i);
+		:}
+		| id:i LPAREN actualList:al RPAREN
+		{: RESULT = new CallExpNode(i, new ExpListNode(al));
+		:}
+		;
+
+actualList ::= exp:e
+		{: Sequence seq = new Sequence();
+		   seq.addToEnd(e);
+		   RESULT = seq;
+		:}
+		| exp:e COMMA actualList:al
+		{: al.addToFront(e);
+		   RESULT = al;
+		:}
+		;
+		
+	
 type		::= INT
 		{: RESULT = new IntNode();
+		:}
+		| BOOLEAN
+		{: RESULT = new BooleanNode();
+		:}
+		| STRING
+		{: RESULT = new StringNode();
 		:}
 		;
 
