@@ -1,3 +1,99 @@
 // Here you write your extensive test program that must
 // excercise all grammatical concepts defined in simple.grammar
-int a;
+public class test {
+    // basic declarations
+    static int a;
+    static boolean b;
+
+    //function with return type int 
+    public static int newTests(int number, boolean b){
+        //test if statement and comperator
+        if(number<=20){
+            b = 5==10 || 10>=5;
+            a =-10-3; //two minus operations
+            //two power
+            c = 1**b**c;
+        }
+        // test assignment and types
+        hello = "world";
+        b = true + funco(a,b);
+        b = false * test();
+    }    
+    //test int function with no args
+    public static int a (){
+        //test some more expressions
+        if(20 && 2 || 10) {
+            a = (-10 * 2) + 2**3;
+        }
+        //test function calls
+        test(5, 10);
+        test2();
+        a = b();
+        a = b(1,2,"hello");
+
+        //nested block - I don't get the sense of it really, maybe for the switch case?
+        {   int nestedA;
+            boolean nestedB;
+            //test power operator
+            nestedA = 10 **2 -5;
+            nestedB= true;
+        }
+
+    }
+
+    //test switch case
+    public static void isThisWorking(){
+        switch(b != 5){
+            case true: b = 10;
+            case false: b = -10;
+            case b>-5: {    //test if unary minus works as expected and nested block in case
+                if(b < 3){ //nest the nested
+                    return a;
+                }
+            } 
+            default: return a;
+        }
+    }
+    //test void function with args
+    public static void funco (boolean c, int a, String b) {
+        String hello;
+        boolean isItTrue;
+        int numb;
+        numb = 20 + 3 * 2;
+        return;
+        if (10 == 20){
+            k = 10 != 2;
+        }
+    }
+    /*
+    Multi line comments work as well
+    */
+
+    public static int func2 (int j, int test) {
+        String world;
+        a();
+        System.out.println("This is a String");
+        return 10; 
+    }
+
+    public static void testIfElse(int j, int k) {
+        // test if else statement
+        if(20+10) {
+            a = 10;
+            return;
+        } else {
+            k = ! 20 - 1 / 2;
+            return;
+        } //test do while
+        do{
+            a = 14;
+        } while(10)
+
+    }
+
+    public static void testUgly(){
+        //test ugly formatted code - example taken from task sheet
+        if (b == -1) {x = 4 + 3 * 5-y; do {y = y * 2 + x; } while
+(c)}
+    }
+}
