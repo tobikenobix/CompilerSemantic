@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.LinkedList;
 
 // **********************************************************************
 // The ASTnode class defines the nodes of the abstract-syntax tree that
@@ -118,6 +119,8 @@ abstract class ASTnode {
     protected void doIndent(PrintWriter p, int indent) {
 	for (int k=0; k<indent; k++) p.print(" ");
     }
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+    }
 }
 
 // **********************************************************************
@@ -128,6 +131,11 @@ class ProgramNode extends ASTnode {
     public ProgramNode(IdNode id, ClassBodyNode classBody) {
 	myId = id;
 	myClassBody = classBody;
+    }
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        SymbolTable symTab = new SymbolTable();
+        symTabList.addFirst(symTab);
+        myId.nameAnalysis(symTabList, scope, Types.ClassType);
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -291,6 +299,9 @@ class SwitchGroupListNode extends ASTnode {
 // **********************************************************************
 abstract class DeclNode extends ASTnode
 {
+    public void nameAnalysis(SymbolTable symTable) {
+
+    }
 }
 
 class FieldDeclNode extends DeclNode {
@@ -298,6 +309,8 @@ class FieldDeclNode extends DeclNode {
 	myType = type;
 	myId = id;
     }
+    //TODO: check if this works, if so alter all other decl nodes as well 
+    
     public void decompile(PrintWriter p, int indent) {
 	doIndent(p, indent);
 	p.print("static ");
@@ -405,6 +418,8 @@ class FormalDeclNode extends DeclNode {
 // TypeNode and its Subclasses
 // **********************************************************************
 abstract class TypeNode extends ASTnode {
+    //TODO: check if this works as supposed to
+    abstract public int returnType();
 }
 
 class IntNode extends TypeNode
@@ -414,6 +429,9 @@ class IntNode extends TypeNode
 
     public void decompile(PrintWriter p, int indent) {
 	p.print("int");
+    }
+    public int returnType() {
+        return Types.IntType;
     }
 }
 
@@ -425,6 +443,10 @@ class BooleanNode extends TypeNode
     public void decompile(PrintWriter p, int indent) {
         p.print("boolean");
     }
+
+    public int returnType() {
+        return Types.BoolType;
+    }
 }
 
 class StringNode extends TypeNode
@@ -434,6 +456,10 @@ class StringNode extends TypeNode
 
     public void decompile(PrintWriter p, int indent) {
         p.print("String");
+    }
+
+    public int returnType() {
+        return Types.StringType;
     }
 }
 
@@ -750,14 +776,36 @@ class IdNode extends ExpNode
 	myCharNum = charNum;
 	myStrVal = strVal;
     }
+    // check if idNode already exists in the symbol table
+    //TODO: check if it works correctly and if so, add possiblity to check all other symTables "above" the current one
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope, int type) {
+        SymbolTable symTab = symTabList.getFirst();
+        if (symTab.lookup(myStrVal) == null) {
+            symTab.insert(myStrVal, type);
+            myType = type;
+        } else {
+            Errors.fatal(myLineNum, myCharNum, "Multiply declared identifier");
+        }
+    }
 
     public void decompile(PrintWriter p, int indent) {
-	p.print(myStrVal);
+	p.print(myStrVal + " (" + Types.ToString(myType) + ")");
     }
 
     private int myLineNum;
     private int myCharNum;
     private String myStrVal;
+    private int myType;
+
+    public String getStrVal() {
+        return myStrVal;
+    }
+    public int getLineNum() {
+        return myLineNum;
+    }
+    public int getCharNum() {
+        return myCharNum;
+    }
 }
 
 // added by me to have a seperate node for function calls inside an expression
