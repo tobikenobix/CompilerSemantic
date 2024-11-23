@@ -1,2 +1,6 @@
-public class test(class) {
+public class test (class) {
+  static int a (int);
+  static boolean b (boolean);
+  static int a (class);
+  static String c (String);
 }

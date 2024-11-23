@@ -1,4 +1,9 @@
 // Here you write your extensive test program that must
 // excercise all grammatical concepts defined in simple.grammar
 public class test {
+    // basic declarations
+    static int a;
+    static boolean b;
+    static int a;
+    static String c;
 }

@@ -136,6 +136,7 @@ class ProgramNode extends ASTnode {
         SymbolTable symTab = new SymbolTable();
         symTabList.addFirst(symTab);
         myId.nameAnalysis(symTabList, scope, Types.ClassType);
+        myClassBody.nameAnalysis(symTabList, scope);
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -156,6 +157,12 @@ class ClassBodyNode extends ASTnode {
 	myDeclList = declList;
     }
 
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        SymbolTable symbTab = new SymbolTable();
+        symTabList.addFirst(symbTab); // new scope
+        myDeclList.nameAnalysis(symTabList, scope);
+    }
+
     public void decompile(PrintWriter p, int indent) {
 	myDeclList.decompile(p, indent);
     }
@@ -167,6 +174,17 @@ class ClassBodyNode extends ASTnode {
 class DeclListNode extends ASTnode {
     public DeclListNode(Sequence S) {
 	myDecls = S;
+    }
+    
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        try {
+            for (myDecls.start(); myDecls.isCurrent(); myDecls.advance()) {
+                ((DeclNode)myDecls.getCurrent()).nameAnalysis(symTabList, scope);
+            }
+        } catch (NoCurrentException ex) {
+            System.err.println("unexpected NoCurrentException in DeclListNode.nameAnalysis");
+            System.exit(-1);
+        }
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -187,6 +205,19 @@ class DeclListNode extends ASTnode {
 class FormalsListNode extends ASTnode {
     public FormalsListNode(Sequence S) {
 	myFormals = S;
+    }
+
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        SymbolTable symTab = new SymbolTable();
+        symTabList.addFirst(symTab); // new scope
+        try {
+            for (myFormals.start(); myFormals.isCurrent(); myFormals.advance()) {
+                ((FormalDeclNode)myFormals.getCurrent()).nameAnalysis(symTabList, scope);
+            }
+        } catch (NoCurrentException ex) {
+            System.err.println("unexpected NoCurrentException in FormalsListNode.nameAnalysis");
+            System.exit(-1);
+        }
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -217,6 +248,12 @@ class MethodBodyNode extends ASTnode {
 	myStmtList = stmtList;
     }
 
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope){
+        myDeclList.nameAnalysis(symTabList, scope);
+        myStmtList.nameAnalysis(symTabList, scope);
+
+    }
+
     public void decompile(PrintWriter p, int indent) {
         myDeclList.decompile(p, indent);
         myStmtList.decompile(p, indent);
@@ -230,6 +267,17 @@ class MethodBodyNode extends ASTnode {
 class StmtListNode extends ASTnode {
     public StmtListNode(Sequence S) {
 	myStmts = S;
+    }
+
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        try {
+            for (myStmts.start(); myStmts.isCurrent(); myStmts.advance()) {
+                ((StmtNode)myStmts.getCurrent()).nameAnalysis(symTabList, scope);
+            }
+        } catch (NoCurrentException ex) {
+            System.err.println("unexpected NoCurrentException in StmtListNode.nameAnalysis");
+            System.exit(-1);
+        }
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -274,6 +322,7 @@ class ExpListNode extends ASTnode {
     private Sequence myExps;
 }
 
+// maybe add a nameAnalysis method to this class
 class SwitchGroupListNode extends ASTnode {
     public SwitchGroupListNode(Sequence S) {
         mySwitchGroups = S;
@@ -299,17 +348,17 @@ class SwitchGroupListNode extends ASTnode {
 // **********************************************************************
 abstract class DeclNode extends ASTnode
 {
-    public void nameAnalysis(SymbolTable symTable) {
-
-    }
+    abstract public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope);
 }
 
 class FieldDeclNode extends DeclNode {
     public FieldDeclNode(TypeNode type, IdNode id) {
 	myType = type;
 	myId = id;
+    } 
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        myId.nameAnalysis(symTabList, scope, myType.returnType());
     }
-    //TODO: check if this works, if so alter all other decl nodes as well 
     
     public void decompile(PrintWriter p, int indent) {
 	doIndent(p, indent);
@@ -331,6 +380,10 @@ class VarDeclNode extends DeclNode {
 	myId = id;
     }
 
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        myId.nameAnalysis(symTabList, scope, myType.returnType());
+    }
+
     public void decompile(PrintWriter p, int indent) {
         doIndent(p, indent);
         myType.decompile(p, indent);
@@ -350,6 +403,11 @@ class MethodDeclNode extends DeclNode {
 	myId = id;
 	myFormalsList = formalList;
 	myBody = body;
+    }
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        myId.nameAnalysis(symTabList, scope, Types.MethodTypeVoid);
+        myFormalsList.nameAnalysis(symTabList, scope);
+        myBody.nameAnalysis(symTabList, scope);
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -379,6 +437,12 @@ class MethodDeclNodeInt extends MethodDeclNode {
     
     }
 
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        myId.nameAnalysis(symTabList, scope, Types.MethodTypeInt);
+        myFormalsList.nameAnalysis(symTabList, scope); 
+        myBody.nameAnalysis(symTabList, scope);
+    }
+
     public void decompile(PrintWriter p, int indent) {
         doIndent(p, indent);
         p.print("public static int ");
@@ -402,6 +466,10 @@ class FormalDeclNode extends DeclNode {
 	myId = id;
     }
 
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        myId.nameAnalysis(symTabList, scope, myType.returnType());
+    }
+
     public void decompile(PrintWriter p, int indent) {
         myType.decompile(p, indent);
         p.print(" ");
@@ -418,7 +486,6 @@ class FormalDeclNode extends DeclNode {
 // TypeNode and its Subclasses
 // **********************************************************************
 abstract class TypeNode extends ASTnode {
-    //TODO: check if this works as supposed to
     abstract public int returnType();
 }
 
@@ -670,6 +737,14 @@ class BlockStmtNode extends StmtNode {
         myVarDecls = varDecls;
         myStmts = stmts;
     }
+
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        SymbolTable symTab = new SymbolTable();
+        symTabList.addFirst(symTab); // new scope
+        myVarDecls.nameAnalysis(symTabList, scope);
+        myStmts.nameAnalysis(symTabList, scope);
+    }
+
     public void decompile(PrintWriter p, int indent) {
         p.println("{");
         myVarDecls.decompile(p, indent+2);
@@ -777,13 +852,13 @@ class IdNode extends ExpNode
 	myStrVal = strVal;
     }
     // check if idNode already exists in the symbol table
-    //TODO: check if it works correctly and if so, add possiblity to check all other symTables "above" the current one
     public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope, int type) {
         SymbolTable symTab = symTabList.getFirst();
         if (symTab.lookup(myStrVal) == null) {
             symTab.insert(myStrVal, type);
             myType = type;
         } else {
+            symTab.insert(myStrVal, Types.ErrorType);
             Errors.fatal(myLineNum, myCharNum, "Multiply declared identifier");
         }
     }
