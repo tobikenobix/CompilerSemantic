@@ -5,7 +5,7 @@ class Types {
     public static final int StringType = 3;
     public static final int MethodTypeVoid = 4;
     public static final int MethodTypeInt = 5;
-    public static final int ErrorType = 5;
+    public static final int ErrorType = 6;
 
     public static String ToString(int v) {
         switch(v){

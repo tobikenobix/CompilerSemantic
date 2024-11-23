@@ -1,6 +1,11 @@
 public class test (class) {
   static int a (int);
+  static int a (error);
   static boolean b (boolean);
-  static int a (class);
   static String c (String);
+  public static int isThisWorking (method int) (int x (int), int y (int)) {
+    int l (int);
+    String hallo (String);
+    boolean jsdkfl (boolean);
+  }
 }

@@ -3,7 +3,13 @@
 public class test {
     // basic declarations
     static int a;
-    static boolean b;
     static int a;
+    static boolean b;
     static String c;
+
+     public static int isThisWorking(int x, int y){
+        int l;
+        String hallo;
+        boolean jsdkfl;
+     }
 }

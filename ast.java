@@ -859,12 +859,13 @@ class IdNode extends ExpNode
             myType = type;
         } else {
             symTab.insert(myStrVal, Types.ErrorType);
+            myType = Types.ErrorType;
             Errors.fatal(myLineNum, myCharNum, "Multiply declared identifier");
         }
     }
 
     public void decompile(PrintWriter p, int indent) {
-	p.print(myStrVal + " (" + Types.ToString(myType) + ")");
+	p.print(myStrVal + " (" + Types.ToString(myType) +")");
     }
 
     private int myLineNum;
