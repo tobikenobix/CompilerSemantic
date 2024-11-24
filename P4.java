@@ -61,8 +61,10 @@ public class P4 {
 	    System.exit(0);
 	}
 	LinkedList<SymbolTable> symTabList = new LinkedList<SymbolTable>();
-	SymbolTable symTab = new SymbolTable();
 	((ASTnode)root.value).nameAnalysis(symTabList, 0);
+	for(SymbolTable symTab : symTabList){
+		System.out.println(symTab.toString());
+	}
 	((ASTnode)root.value).decompile(outFile, 0);
 	outFile.close();
 

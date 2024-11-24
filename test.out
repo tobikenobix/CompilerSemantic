@@ -1,11 +1,14 @@
 public class test (class) {
   static int a (int);
-  static int a (error);
   static boolean b (boolean);
   static String c (String);
   public static int isThisWorking (method int) (int x (int), int y (int)) {
     int l (int);
+    int a (int);
     String hallo (String);
     boolean jsdkfl (boolean);
+  }
+  public static int test2 (method int) (String kl (String), int to (int)) {
+    int to (error);
   }
 }

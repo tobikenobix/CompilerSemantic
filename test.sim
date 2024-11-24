@@ -3,13 +3,17 @@
 public class test {
     // basic declarations
     static int a;
-    static int a;
+    //static int a;
     static boolean b;
     static String c;
 
      public static int isThisWorking(int x, int y){
         int l;
+        int a;
         String hallo;
         boolean jsdkfl;
+     }
+     public static int test2(String kl, int to ){
+        int to;
      }
 }

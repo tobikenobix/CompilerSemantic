@@ -30,4 +30,9 @@ public class SymbolTable {
 		table.put(name, sym);
 		return sym;
     }
+
+	@Override
+	public String toString() {
+		return table.toString();
+	}
 }
