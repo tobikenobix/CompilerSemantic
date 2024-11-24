@@ -35,4 +35,8 @@ public class test (class) {
     } while ((a (int) > n (int)))
     return hihi (int);
   }
+  public static void main (method void) () {
+    isThisWorking (method int)();
+    test2 (method int)();
+  }
 }

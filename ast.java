@@ -161,6 +161,11 @@ class ClassBodyNode extends ASTnode {
         SymbolTable symbTab = new SymbolTable();
         symTabList.addFirst(symbTab); // new scope
         myDeclList.nameAnalysis(symTabList, scope);
+        //check if the main method is declared
+        SymbolTable symTabScope = symTabList.get(symTabList.size()-2);
+        if(symTabScope.lookup("main") == null || symTabScope.lookup("main").type() != Types.MethodTypeVoid){
+            Errors.fatal(0, 0, "No main method declared");
+        }
     }
 
     public void decompile(PrintWriter p, int indent) {

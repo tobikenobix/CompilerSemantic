@@ -42,4 +42,9 @@ public class test {
 
         return hihi;
      }
+
+     public static void main(){
+        isThisWorking();
+        test2();
+     }
 }
