@@ -630,6 +630,7 @@ class AssignStmtNode extends StmtNode {
 
     public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
         myId.lookup(symTabList, scope);
+        myExp.lookup(symTabList, scope);
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -979,6 +980,11 @@ class CallExpNode extends ExpNode {
 	myExpList = new ExpListNode(new Sequence());
     }
 
+    public void lookup(LinkedList<SymbolTable> symTabList, int scope) {
+        myId.lookup(symTabList, scope);
+        myExpList.nameAnalysis(symTabList, scope);
+    }
+
     public void decompile(PrintWriter p, int indent) {
         myId.decompile(p, indent);
         myExpList.decompile(p, indent);
@@ -994,6 +1000,7 @@ abstract class UnaryExpNode extends ExpNode {
 	myExp = exp;
     }
     public void lookup(LinkedList<SymbolTable> symTabList, int scope) {
+        myExp.lookup(symTabList, scope);
     }
 
     // one child
@@ -1005,6 +1012,10 @@ abstract class BinaryExpNode extends ExpNode
     public BinaryExpNode(ExpNode exp1, ExpNode exp2) {
 	myExp1 = exp1;
 	myExp2 = exp2;
+    }
+    public void lookup(LinkedList<SymbolTable> symTabList, int scope) {
+        myExp1.lookup(symTabList, scope);
+        myExp2.lookup(symTabList, scope);
     }
 
     // two kids
@@ -1021,10 +1032,7 @@ class UnaryMinusNode extends UnaryExpNode
     public UnaryMinusNode(ExpNode exp) {
 	super(exp);
     }
-
-    public void lookup(LinkedList<SymbolTable> symTabList, int scope) {
-        myExp.lookup(symTabList, scope);
-    }
+    
 
     public void decompile(PrintWriter p, int indent) {
         p.print("(-");

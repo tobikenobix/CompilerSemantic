@@ -12,7 +12,7 @@ public class test (class) {
       a (int) = 10;
       System.out.println(c (String));
     }
-    if (c (String)) {
+    if (!(c (String))) {
       to (int) = 3;
     } else {
       j (int) = 0;
@@ -22,17 +22,17 @@ public class test (class) {
     int n (int);
     boolean working (boolean);
     int hihi (int);
-    n (int) = isThisWorking (class)(n (class), hihi (class));
-    n (int) = (-n (class));
+    n (int) = isThisWorking (method int)(n (int), hihi (int));
+    n (int) = (-n (int));
+    n (int) = n (int);
     a (int) = 3;
     if (n (int)) {
       n (int) = 10;
     }
     do {
       n (int) = 9;
-    } while (a (int))
-    switch (n (int)) {
-    }
+      n (int) = isThisWorking (method int)();
+    } while ((a (int) > n (int)))
     return hihi (int);
   }
 }

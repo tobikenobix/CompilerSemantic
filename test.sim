@@ -16,7 +16,7 @@ public class test {
             System.out.println(c);
         }
 
-        if (c) {
+        if (!c) {
             to = 3;
         } else {
             j = 0;
@@ -29,6 +29,7 @@ public class test {
         int hihi;
         n = isThisWorking(n, hihi);
         n = -n;
+        n = n;
         a = 3;
         if ( n ) {
             n = 10;
@@ -36,10 +37,8 @@ public class test {
 
         do {
             n = 9;
-        } while (a)
-        switch(n) {
-
-        }
+            n = isThisWorking();
+        } while (a>n)
 
         return hihi;
      }
