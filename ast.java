@@ -300,6 +300,17 @@ class ExpListNode extends ASTnode {
     public ExpListNode(Sequence S) {
 	myExps = S;
     }
+
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        try {
+            for (myExps.start(); myExps.isCurrent(); myExps.advance()) {
+                ((ExpNode)myExps.getCurrent()).lookup(symTabList, scope);
+            }
+        } catch (NoCurrentException ex) {
+            System.err.println("unexpected NoCurrentException in ExpListNode.nameAnalysis");
+            System.exit(-1);
+        }
+    }
     public void decompile(PrintWriter p, int indent) {
         p.print("(");
         boolean first = true;
@@ -441,6 +452,13 @@ class MethodDeclNodeInt extends MethodDeclNode {
         myId.nameAnalysis(symTabList, scope, Types.MethodTypeInt);
         myFormalsList.nameAnalysis(symTabList, scope); 
         myBody.nameAnalysis(symTabList, scope);
+        
+        //check if the method has a return statement
+        if(symTabList.getFirst().lookup("return") == null){
+            Errors.fatal(myId.getLineNum(), myId.getCharNum(), "Method must have a return statement");
+        }
+
+        symTabList.removeFirst(); //TODO recheck, this removes the scope of the method "leaving" it
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -581,13 +599,17 @@ class SwitchGroupNode extends ASTnode {
 // **********************************************************************
 // StmtNode and its subclasses
 // **********************************************************************
-
 abstract class StmtNode extends ASTnode {
+    public abstract void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope);
 }
 
 class PrintStmtNode extends StmtNode {
     public PrintStmtNode(ExpNode exp) {
 	myExp = exp;
+    }
+    
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        myExp.lookup(symTabList, scope);
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -606,6 +628,10 @@ class AssignStmtNode extends StmtNode {
 	myExp = exp;
     }
 
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        myId.lookup(symTabList, scope);
+    }
+
     public void decompile(PrintWriter p, int indent) {
         myId.decompile(p, indent);
         p.print(" = ");
@@ -622,6 +648,11 @@ class IfStmtNode extends StmtNode {
     public IfStmtNode(ExpNode exp, StmtListNode slist) {
 	myExp = exp;
 	myStmtList = slist;
+    }
+
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        myExp.lookup(symTabList, scope);
+        myStmtList.nameAnalysis(symTabList, scope);
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -658,6 +689,12 @@ class IfElseStmtNode extends StmtNode {
         p.println("}");
     }
 
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        myExp.lookup(symTabList, scope);
+        myThenStmtList.nameAnalysis(symTabList, scope);
+        myElseStmtList.nameAnalysis(symTabList, scope);
+    }
+
     // 3 kids
     private ExpNode myExp;
     private StmtListNode myThenStmtList;
@@ -668,6 +705,11 @@ class WhileStmtNode extends StmtNode {
     public WhileStmtNode(ExpNode exp, StmtListNode slist) {
 	myExp = exp;
 	myStmtList = slist;
+    }
+
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        myExp.lookup(symTabList, scope);
+        myStmtList.nameAnalysis(symTabList, scope);
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -695,6 +737,14 @@ class CallStmtNode extends StmtNode {
 	myExpList = new ExpListNode(new Sequence());
     }
 
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        //for (SymbolTable symTab: symTabList){
+          //  System.out.println(symTab.toString());
+        //}
+        myId.lookup(symTabList, scope);
+        myExpList.nameAnalysis(symTabList, scope);
+    }
+
     public void decompile(PrintWriter p, int indent) {
         myId.decompile(p, indent);
         myExpList.decompile(p, indent);
@@ -711,6 +761,9 @@ class CallStmtNode extends StmtNode {
 class ReturnStmtNode extends StmtNode {
     public ReturnStmtNode() {
     }
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        //nothing to do since there is no return value
+    }
 
     public void decompile(PrintWriter p, int indent) {
         p.println("return;");
@@ -720,6 +773,10 @@ class ReturnStmtNode extends StmtNode {
 class ReturnWithValueNode extends StmtNode {
     public ReturnWithValueNode(ExpNode exp) {
     myExp = exp;
+    }
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        myExp.lookup(symTabList, scope);
+        symTabList.getFirst().insert("return", Types.ReturnIntType);
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -743,6 +800,7 @@ class BlockStmtNode extends StmtNode {
         symTabList.addFirst(symTab); // new scope
         myVarDecls.nameAnalysis(symTabList, scope);
         myStmts.nameAnalysis(symTabList, scope);
+        symTabList.removeFirst(); //TODO recheck, this removes the scope of the block "leaving" it
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -763,6 +821,10 @@ class SwitchStmtNode extends StmtNode {
         mySwitchGroupList = sgl;
     }
 
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        myExp.lookup(symTabList, scope);
+    }
+
     public void decompile(PrintWriter p, int indent) {
         p.print("switch (");
         myExp.decompile(p, indent);
@@ -780,8 +842,10 @@ class SwitchStmtNode extends StmtNode {
 // **********************************************************************
 // ExpNode and its subclasses
 // **********************************************************************
-
+//TODO check all classes that extend ExpNode to see if they need a lookup or nameAnalysis method
 abstract class ExpNode extends ASTnode {
+    public void lookup(LinkedList<SymbolTable> symTabList, int scope) {
+    }
 }
 
 class IntLitNode extends ExpNode {
@@ -851,16 +915,35 @@ class IdNode extends ExpNode
 	myCharNum = charNum;
 	myStrVal = strVal;
     }
-    // check if idNode already exists in the symbol table
+    // check if idNode already exists in the symbol table and insert it if it doesn't
     public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope, int type) {
-        SymbolTable symTab = symTabList.getFirst();
-        if (symTab.lookup(myStrVal) == null) {
-            symTab.insert(myStrVal, type);
+        boolean exists = false;
+        for (SymbolTable symTab: symTabList) {
+            if (symTab.lookup(myStrVal) != null) {
+                exists = true;
+                
+            }
+        }
+        if (!exists) {
+            symTabList.getFirst().insert(myStrVal, type);
             myType = type;
         } else {
-            symTab.insert(myStrVal, Types.ErrorType);
             myType = Types.ErrorType;
             Errors.fatal(myLineNum, myCharNum, "Multiply declared identifier");
+        }
+    }
+    // check if idNode exists in the symbol table and set the type of the idNode
+    public void lookup(LinkedList<SymbolTable> symTabList, int scope) {
+        boolean exists = false;
+        for (SymbolTable symTab: symTabList) {
+            if (symTab.lookup(myStrVal) != null) {
+                exists = true;
+                myType = symTab.lookup(myStrVal).type();
+            }
+        }
+        if (!exists) {
+            myType = Types.ErrorType;
+            Errors.fatal(myLineNum, myCharNum, "Undeclared identifier");
         }
     }
 
@@ -910,6 +993,8 @@ abstract class UnaryExpNode extends ExpNode {
     public UnaryExpNode(ExpNode exp) {
 	myExp = exp;
     }
+    public void lookup(LinkedList<SymbolTable> symTabList, int scope) {
+    }
 
     // one child
     protected ExpNode myExp;
@@ -935,6 +1020,10 @@ class UnaryMinusNode extends UnaryExpNode
 {
     public UnaryMinusNode(ExpNode exp) {
 	super(exp);
+    }
+
+    public void lookup(LinkedList<SymbolTable> symTabList, int scope) {
+        myExp.lookup(symTabList, scope);
     }
 
     public void decompile(PrintWriter p, int indent) {

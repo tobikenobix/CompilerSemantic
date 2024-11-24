@@ -6,6 +6,7 @@ class Types {
     public static final int MethodTypeVoid = 4;
     public static final int MethodTypeInt = 5;
     public static final int ErrorType = 6;
+    public static final int ReturnIntType = 7;
 
     public static String ToString(int v) {
         switch(v){
@@ -16,6 +17,7 @@ class Types {
 	case 4: return "method void";
     case 5: return "method int";
 	case 6: return "error";
+    case 7: return "return int";
 	default: throw new RuntimeException();
         }
     }

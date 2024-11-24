@@ -1,19 +1,46 @@
-// Here you write your extensive test program that must
 // excercise all grammatical concepts defined in simple.grammar
 public class test {
     // basic declarations
     static int a;
-    //static int a;
+    static int to;
     static boolean b;
     static String c;
 
      public static int isThisWorking(int x, int y){
-        int l;
-        int a;
-        String hallo;
-        boolean jsdkfl;
+        int lol;
+        int j;
+        x = 5;
+        {
+            boolean working;
+            a = 10;
+            System.out.println(c);
+        }
+
+        if (c) {
+            to = 3;
+        } else {
+            j = 0;
+        }
+        
      }
-     public static int test2(String kl, int to ){
-        int to;
+     public static int test2(String kl ){
+        int n;
+        boolean working;
+        int hihi;
+        n = isThisWorking(n, hihi);
+        n = -n;
+        a = 3;
+        if ( n ) {
+            n = 10;
+        }
+
+        do {
+            n = 9;
+        } while (a)
+        switch(n) {
+
+        }
+
+        return hihi;
      }
 }

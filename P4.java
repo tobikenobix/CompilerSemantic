@@ -61,13 +61,19 @@ public class P4 {
 	    System.exit(0);
 	}
 	LinkedList<SymbolTable> symTabList = new LinkedList<SymbolTable>();
+
 	((ASTnode)root.value).nameAnalysis(symTabList, 0);
-	for(SymbolTable symTab : symTabList){
-		System.out.println(symTab.toString());
-	}
+	System.out.println("\n name analysis complete");
+	//debug(symTabList);
 	((ASTnode)root.value).decompile(outFile, 0);
 	outFile.close();
 
 	return;
     }
+
+	private static void debug(LinkedList<SymbolTable> symTabList){
+		for(SymbolTable symTab : symTabList){
+			System.out.println(symTab.toString());
+		}
+	}
 }

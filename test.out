@@ -1,14 +1,38 @@
 public class test (class) {
   static int a (int);
+  static int to (int);
   static boolean b (boolean);
   static String c (String);
   public static int isThisWorking (method int) (int x (int), int y (int)) {
-    int l (int);
-    int a (int);
-    String hallo (String);
-    boolean jsdkfl (boolean);
+    int lol (int);
+    int j (int);
+    x (int) = 5;
+    {
+      boolean working (boolean);
+      a (int) = 10;
+      System.out.println(c (String));
+    }
+    if (c (String)) {
+      to (int) = 3;
+    } else {
+      j (int) = 0;
+    }
   }
-  public static int test2 (method int) (String kl (String), int to (int)) {
-    int to (error);
+  public static int test2 (method int) (String kl (String)) {
+    int n (int);
+    boolean working (boolean);
+    int hihi (int);
+    n (int) = isThisWorking (class)(n (class), hihi (class));
+    n (int) = (-n (class));
+    a (int) = 3;
+    if (n (int)) {
+      n (int) = 10;
+    }
+    do {
+      n (int) = 9;
+    } while (a (int))
+    switch (n (int)) {
+    }
+    return hihi (int);
   }
 }
