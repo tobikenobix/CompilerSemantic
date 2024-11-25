@@ -38,5 +38,14 @@ public class test (class) {
   public static void main (method void) () {
     isThisWorking (method int)();
     test2 (method int)();
+    System.out.println(c (String));
+    switch ((a (int) > to (int))) {
+      case true:
+        System.out.println(c (String));
+      case xyz (error):
+        a (int) = 5;
+      default:
+        a (int) = (to (int) + a (int));
+    }
   }
 }

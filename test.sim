@@ -46,5 +46,12 @@ public class test {
      public static void main(){
         isThisWorking();
         test2();
+        System.out.println(c);
+
+        switch (a>to){
+            case true: System.out.println(c);
+            case xyz: a = 5;
+            default: a = to + a;
+        }
      }
 }

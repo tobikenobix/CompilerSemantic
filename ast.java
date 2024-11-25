@@ -344,6 +344,17 @@ class SwitchGroupListNode extends ASTnode {
         mySwitchGroups = S;
     }
 
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        try {
+            for (mySwitchGroups.start(); mySwitchGroups.isCurrent(); mySwitchGroups.advance()) {
+                ((SwitchGroupNode)mySwitchGroups.getCurrent()).nameAnalysis(symTabList, scope);
+            }
+        } catch (NoCurrentException ex) {
+            System.err.println("unexpected NoCurrentException in SwitchGroupListNode.nameAnalysis");
+            System.exit(-1);
+        }
+    }
+
     public void decompile(PrintWriter p, int indent) {
         try {
             for (mySwitchGroups.start(); mySwitchGroups.isCurrent(); mySwitchGroups.advance()) {
@@ -557,11 +568,16 @@ class StringNode extends TypeNode
 // SwitchLabelNode and its Subclasses
 // **********************************************************************
 abstract class SwitchLabelNode extends ASTnode {
+    public abstract void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope);
 }
 
 class SwitchLabelNodeCase extends SwitchLabelNode {
     public SwitchLabelNodeCase(ExpNode exp) {
         myExp = exp;
+    }
+
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        myExp.lookup(symTabList, scope);
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -578,6 +594,9 @@ class SwitchLabelNodeDefault extends SwitchLabelNode {
     public SwitchLabelNodeDefault() {
     }
 
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+    }
+
     public void decompile(PrintWriter p, int indent) {
         doIndent(p, indent);
         p.println("default:");
@@ -591,6 +610,11 @@ class SwitchGroupNode extends ASTnode {
     public SwitchGroupNode(SwitchLabelNode sLabelNode,StmtListNode slist) {
         myStmtList = slist;
         mySwitchLabelNode = sLabelNode;
+    }
+
+    public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
+        mySwitchLabelNode.nameAnalysis(symTabList, scope);
+         myStmtList.nameAnalysis(symTabList, scope);
     }
     public void decompile(PrintWriter p, int indent) {
         mySwitchLabelNode.decompile(p, indent);
@@ -829,6 +853,7 @@ class SwitchStmtNode extends StmtNode {
 
     public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
         myExp.lookup(symTabList, scope);
+        mySwitchGroupList.nameAnalysis(symTabList, scope);
     }
 
     public void decompile(PrintWriter p, int indent) {
