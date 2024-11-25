@@ -1,57 +1,16 @@
 // excercise all grammatical concepts defined in simple.grammar
 public class test {
     // basic declarations
-    static int a;
-    static int to;
-    static boolean b;
-    static String c;
-
-     public static int isThisWorking(int x, int y){
-        int lol;
-        int j;
-        x = 5;
-        {
-            boolean working;
-            a = 10;
-            System.out.println(c);
-        }
-
-        if (!c) {
-            to = 3;
-        } else {
-            j = 0;
-        }
-        
-     }
-     public static int test2(String kl ){
-        int n;
-        boolean working;
-        int hihi;
-        n = isThisWorking(n, hihi);
-        n = -n;
-        n = n;
-        a = 3;
-        if ( n ) {
-            n = 10;
-        }
-
-        do {
-            n = 9;
-            n = isThisWorking();
-        } while (a>n)
-
-        return hihi;
-     }
-
      public static void main(){
-        isThisWorking();
-        test2();
-        System.out.println(c);
+        int x;
+        int y;
+        int z;
+        boolean b;
+        String ello;
+        x = y - z;
+        y = 2 > z;
+        z = true <= "hallo";
+        b= z <= x;
 
-        switch (a>to){
-            case true: System.out.println(c);
-            case xyz: a = 5;
-            default: a = to + a;
-        }
      }
 }

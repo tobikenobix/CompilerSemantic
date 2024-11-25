@@ -147,6 +147,11 @@ class ProgramNode extends ASTnode {
 	p.println("}");
     }
 
+    public void typeCheck(){
+        myClassBody.typeCheck();
+    }
+
+
     // 2 kids
     private IdNode myId;
     private ClassBodyNode myClassBody;
@@ -170,6 +175,10 @@ class ClassBodyNode extends ASTnode {
 
     public void decompile(PrintWriter p, int indent) {
 	myDeclList.decompile(p, indent);
+    }
+
+    public void typeCheck(){
+        myDeclList.typeCheck();
     }
 
     // 1 kid
@@ -201,6 +210,17 @@ class DeclListNode extends ASTnode {
 	    System.err.println("unexpected NoCurrentException in DeclListNode.print");
 	    System.exit(-1);
 	}
+    }
+
+    public void typeCheck(){
+        try {
+            for (myDecls.start(); myDecls.isCurrent(); myDecls.advance()) {
+                ((DeclNode)myDecls.getCurrent()).typeCheck();
+            }
+        } catch (NoCurrentException ex) {
+            System.err.println("unexpected NoCurrentException in DeclListNode.typeCheck");
+            System.exit(-1);
+        }
     }
 
   // sequence of kids (DeclNodes)
@@ -243,6 +263,8 @@ class FormalsListNode extends ASTnode {
         p.print(")");
     }
 
+    // TODO: verify no typecheck needed
+
   // sequence of kids (FormalDeclNodes)
     private Sequence myFormals;
 }
@@ -262,6 +284,10 @@ class MethodBodyNode extends ASTnode {
     public void decompile(PrintWriter p, int indent) {
         myDeclList.decompile(p, indent);
         myStmtList.decompile(p, indent);
+    }
+
+    public void typeCheck(){
+        myStmtList.typeCheck();
     }
 
     // 2 kids
@@ -293,6 +319,17 @@ class StmtListNode extends ASTnode {
             }
         } catch (NoCurrentException ex) {
             System.err.println("unexpected NoCurrentException in StmtListNode.print");
+            System.exit(-1);
+        }
+    }
+
+    public void typeCheck(){
+        try {
+            for (myStmts.start(); myStmts.isCurrent(); myStmts.advance()) {
+                ((StmtNode)myStmts.getCurrent()).typeCheck();
+            }
+        } catch (NoCurrentException ex) {
+            System.err.println("unexpected NoCurrentException in StmtListNode.typeCheck");
             System.exit(-1);
         }
     }
@@ -376,6 +413,9 @@ class SwitchGroupListNode extends ASTnode {
 abstract class DeclNode extends ASTnode
 {
     abstract public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope);
+    public void typeCheck(){
+        //do nothing
+    }
 }
 
 class FieldDeclNode extends DeclNode {
@@ -395,6 +435,8 @@ class FieldDeclNode extends DeclNode {
 	myId.decompile(p, indent);
 	p.println(";");
     }
+
+    // TODO: verify no typecheck needed
 
     // 2 kids
     private TypeNode myType;
@@ -418,6 +460,8 @@ class VarDeclNode extends DeclNode {
         myId.decompile(p, indent);
         p.println(";");
     }
+
+    // TODO: verify no typecheck needed
 
     // 2 kids
     private TypeNode myType;
@@ -446,6 +490,10 @@ class MethodDeclNode extends DeclNode {
         myBody.decompile(p, indent+2);
         doIndent(p, indent);
         p.println("}");
+    }
+
+    public void typeCheck(){
+        myBody.typeCheck();
     }
 
     // 3 kids
@@ -486,6 +534,10 @@ class MethodDeclNodeInt extends MethodDeclNode {
         myBody.decompile(p, indent+2);
         doIndent(p, indent);
         p.println("}");
+    }
+
+    public void typeCheck(){
+        myBody.typeCheck();
     }
 
     // 3 kids
@@ -630,6 +682,10 @@ class SwitchGroupNode extends ASTnode {
 // **********************************************************************
 abstract class StmtNode extends ASTnode {
     public abstract void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope);
+    //TODO: make it abstract and implement in all subclasses
+    public void typeCheck(){
+        //do nothing
+    }
 }
 
 class PrintStmtNode extends StmtNode {
@@ -646,7 +702,7 @@ class PrintStmtNode extends StmtNode {
         myExp.decompile(p, indent);
         p.println(");");
     }
-
+    //assuming you can print any type so no typecheck done here
     // 1 kid
     private ExpNode myExp;
 }
@@ -667,6 +723,20 @@ class AssignStmtNode extends StmtNode {
         p.print(" = ");
         myExp.decompile(p, indent);
         p.println(";");
+    }
+    public void typeCheck(){
+        int lineNum = myId.getLineNum();
+        int charNum = myId.getCharNum();
+        int expType = myExp.getType();
+        if(myExp instanceof UnaryExpNode){
+            expType = ((UnaryExpNode)myExp).getType(lineNum, charNum);
+        }
+        if(myExp instanceof BinaryExpNode){
+            expType = ((BinaryExpNode)myExp).getType(lineNum, charNum);
+        }
+        if(myId.getType() != expType){ 
+            Errors.fatal(lineNum, charNum, "Type mismatch when assigning to " + myId.getStrVal());
+        }
     }
 
     // 2 kids
@@ -877,6 +947,11 @@ class SwitchStmtNode extends StmtNode {
 abstract class ExpNode extends ASTnode {
     public void lookup(LinkedList<SymbolTable> symTabList, int scope) {
     }
+    //used to get the type of the expression according to Types.java.
+    // TODO: make it abstract and implement it in all subclasses
+    public  int getType(){
+        return Types.ErrorType;
+    } 
 }
 
 class IntLitNode extends ExpNode {
@@ -888,6 +963,10 @@ class IntLitNode extends ExpNode {
 
     public void decompile(PrintWriter p, int indent) {
         p.print(myIntVal);
+    }
+
+    public int getType() {
+        return Types.IntType;
     }
 
     private int myLineNum;
@@ -906,6 +985,10 @@ class StringLitNode extends ExpNode {
         p.print(myStrVal);
     }
 
+    public int getType() {
+        return Types.StringType;
+    }
+
     private int myLineNum;
     private int myColNum;
     private String myStrVal;
@@ -915,6 +998,10 @@ class TrueNode extends ExpNode {
     public TrueNode(int lineNum, int colNum) {
 	myLineNum = lineNum;
 	myColNum = colNum;
+    }
+
+    public int getType() {
+        return Types.BoolType;
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -933,6 +1020,10 @@ class FalseNode extends ExpNode {
 
     public void decompile(PrintWriter p, int indent) {
         p.print("false");
+    }
+
+    public int getType() {
+        return Types.BoolType;
     }
 
     private int myLineNum;
@@ -996,6 +1087,9 @@ class IdNode extends ExpNode
     public int getCharNum() {
         return myCharNum;
     }
+    public int getType() {
+        return myType;
+    }
 }
 
 // added by me to have a seperate node for function calls inside an expression
@@ -1020,6 +1114,14 @@ class CallExpNode extends ExpNode {
         myExpList.decompile(p, indent);
     }
 
+    //checks if return type of the function is int
+    public int getType() {
+        if(myId.getType() == Types.MethodTypeInt){
+            return Types.IntType;
+        }
+        return myId.getType();
+    }
+
     // 2 kids
     private IdNode myId;
     private ExpListNode myExpList;
@@ -1032,6 +1134,8 @@ abstract class UnaryExpNode extends ExpNode {
     public void lookup(LinkedList<SymbolTable> symTabList, int scope) {
         myExp.lookup(symTabList, scope);
     }
+
+    public abstract int getType(int lineNum, int charNum);
 
     // one child
     protected ExpNode myExp;
@@ -1047,6 +1151,7 @@ abstract class BinaryExpNode extends ExpNode
         myExp1.lookup(symTabList, scope);
         myExp2.lookup(symTabList, scope);
     }
+    public abstract int getType(int lineNum, int charNum);
 
     // two kids
     protected ExpNode myExp1;
@@ -1069,6 +1174,14 @@ class UnaryMinusNode extends UnaryExpNode
         myExp.decompile(p, indent);
         p.print(")");
     }
+
+    public int getType(int lineNum, int charNum) {
+        if(myExp.getType() == Types.IntType){
+            return Types.IntType;
+        }
+        Errors.fatal(lineNum, charNum, "Unary minus operator applied to non-integer");
+        return Types.ErrorType;
+    }
 }
 
 class NotNode extends UnaryExpNode
@@ -1082,12 +1195,19 @@ class NotNode extends UnaryExpNode
         myExp.decompile(p, indent);
         p.print(")");
     }
+
+    public int getType(int lineNum, int charNum) {
+        if(myExp.getType() == Types.BoolType){
+            return Types.BoolType;
+        }
+        Errors.fatal(lineNum, charNum, "Logical negation operator applied to non-boolean");
+        return Types.ErrorType;
+    }
 }
 
 // **********************************************************************
 // Subclasses of BinaryExpNode
 // **********************************************************************
-
 class PlusNode extends BinaryExpNode
 {
     public PlusNode(ExpNode exp1, ExpNode exp2) {
@@ -1100,6 +1220,26 @@ class PlusNode extends BinaryExpNode
         p.print(" + ");
         myExp2.decompile(p, indent);
         p.print(")");
+
+    }
+    public int getType(int lineNum, int charNum){
+        int type1 = myExp1.getType();
+        int type2 = myExp2.getType();
+        int returnType = Types.IntType;
+        if(type1 == Types.ErrorType || type2 == Types.ErrorType) {
+            Errors.fatal(lineNum, charNum, "Invalid expression for addition");
+            return Types.ErrorType;
+        }
+        
+        if(type1 != Types.IntType) {
+            Errors.fatal(lineNum, charNum, "First operand of addition is not an int");
+            returnType = Types.ErrorType;
+        }
+        if(type2 != Types.IntType) {
+            Errors.fatal(lineNum, charNum, "Second operand of addition is not an int");
+            returnType = Types.ErrorType;
+        }
+        return returnType;
 
     }
 }
@@ -1117,6 +1257,27 @@ class MinusNode extends BinaryExpNode
         myExp2.decompile(p, indent);
         p.print(")");
     }
+
+    public int getType(int lineNum, int charNum){
+        int type1 = myExp1.getType();
+        int type2 = myExp2.getType();
+        int returnType = Types.IntType;
+        if(type1 == Types.ErrorType || type2 == Types.ErrorType) {
+            Errors.fatal(lineNum, charNum, "Invalid expression for subtraction");
+            return Types.ErrorType;
+        }
+        
+        if(type1 != Types.IntType) {
+            Errors.fatal(lineNum, charNum, "First operand of subtraction is not an int");
+            returnType = Types.ErrorType;
+        }
+        if(type2 != Types.IntType) {
+            Errors.fatal(lineNum, charNum, "Second operand of subtraction is not an int");
+            returnType = Types.ErrorType;
+        }
+        return returnType;
+
+    }
 }
 
 class TimesNode extends BinaryExpNode
@@ -1131,6 +1292,26 @@ class TimesNode extends BinaryExpNode
         p.print(" * ");
         myExp2.decompile(p, indent);
         p.print(")");
+    }
+    public int getType(int lineNum, int charNum){
+        int type1 = myExp1.getType();
+        int type2 = myExp2.getType();
+        int returnType = Types.IntType;
+        if(type1 == Types.ErrorType || type2 == Types.ErrorType) {
+            Errors.fatal(lineNum, charNum, "Invalid expression for multiplication");
+            return Types.ErrorType;
+        }
+        
+        if(type1 != Types.IntType) {
+            Errors.fatal(lineNum, charNum, "First operand of multiplication is not an int");
+            returnType = Types.ErrorType;
+        }
+        if(type2 != Types.IntType) {
+            Errors.fatal(lineNum, charNum, "Second operand of multiplication is not an int");
+            returnType = Types.ErrorType;
+        }
+        return returnType;
+
     }
 }
 
@@ -1147,6 +1328,26 @@ class DivideNode extends BinaryExpNode
         myExp2.decompile(p, indent);
         p.print(")");
     }
+    public int getType(int lineNum, int charNum){
+        int type1 = myExp1.getType();
+        int type2 = myExp2.getType();
+        int returnType = Types.IntType;
+        if(type1 == Types.ErrorType || type2 == Types.ErrorType) {
+            Errors.fatal(lineNum, charNum, "Invalid expression for division");
+            return Types.ErrorType;
+        }
+        
+        if(type1 != Types.IntType) {
+            Errors.fatal(lineNum, charNum, "First operand of divison is not an int");
+            returnType = Types.ErrorType;
+        }
+        if(type2 != Types.IntType) {
+            Errors.fatal(lineNum, charNum, "Second operand of division is not an int");
+            returnType = Types.ErrorType;
+        }
+        return returnType;
+
+    }
 }
 
 class AndNode extends BinaryExpNode
@@ -1161,6 +1362,26 @@ class AndNode extends BinaryExpNode
         p.print(" && ");
         myExp2.decompile(p, indent);
         p.print(")");
+    }
+    public int getType(int lineNum, int charNum){
+        int type1 = myExp1.getType();
+        int type2 = myExp2.getType();
+        int returnType = Types.BoolType;
+        if(type1 == Types.ErrorType || type2 == Types.ErrorType) {
+            Errors.fatal(lineNum, charNum, "Invalid expression for and");
+            return Types.ErrorType;
+        }
+        
+        if(type1 != Types.BoolType) {
+            Errors.fatal(lineNum, charNum, "First operand of and is not a boolean");
+            returnType = Types.ErrorType;
+        }
+        if(type2 != Types.BoolType) {
+            Errors.fatal(lineNum, charNum, "Second operand of and is not a boolean");
+            returnType = Types.ErrorType;
+        }
+        return returnType;
+
     }
 }
 
@@ -1177,6 +1398,26 @@ class OrNode extends BinaryExpNode
         myExp2.decompile(p, indent);
         p.print(")");
     }
+    public int getType(int lineNum, int charNum){
+        int type1 = myExp1.getType();
+        int type2 = myExp2.getType();
+        int returnType = Types.BoolType;
+        if(type1 == Types.ErrorType || type2 == Types.ErrorType) {
+            Errors.fatal(lineNum, charNum, "Invalid expression for or");
+            return Types.ErrorType;
+        }
+        
+        if(type1 != Types.BoolType) {
+            Errors.fatal(lineNum, charNum, "First operand of or is not a boolean");
+            returnType = Types.ErrorType;
+        }
+        if(type2 != Types.BoolType) {
+            Errors.fatal(lineNum, charNum, "Second operand of or is not a boolean");
+            returnType = Types.ErrorType;
+        }
+        return returnType;
+
+    }
 }
 
 class EqualsNode extends BinaryExpNode
@@ -1191,6 +1432,22 @@ class EqualsNode extends BinaryExpNode
         p.print(" == ");
         myExp2.decompile(p, indent);
         p.print(")");
+    }
+
+    public int getType(int lineNum, int charNum){
+        int type1 = myExp1.getType();
+        int type2 = myExp2.getType();
+        if(type1 == Types.ErrorType || type2 == Types.ErrorType) {
+            Errors.fatal(lineNum, charNum, "Invalid expression for equal comparison");
+            return Types.ErrorType;
+        }
+        // assuming you can compare every type
+        if (type1 != type2){
+            Errors.fatal(lineNum, charNum, "Equal comparison not possible for different types " + Types.ToString(type1) + " and " + Types.ToString(type2));
+            return Types.ErrorType;
+        }
+        return Types.BoolType;
+
     }
 }
 
@@ -1207,6 +1464,21 @@ class NotEqualsNode extends BinaryExpNode
         myExp2.decompile(p, indent);
         p.print(")");
     }
+
+    public int getType(int lineNum, int charNum){
+        int type1 = myExp1.getType();
+        int type2 = myExp2.getType();
+        if(type1 == Types.ErrorType || type2 == Types.ErrorType) {
+            Errors.fatal(lineNum, charNum, "Invalid expression for not- equal comparison");
+            return Types.ErrorType;
+        }
+        if (type1 != type2){
+            Errors.fatal(lineNum, charNum, "Not-Equal comparison not possible for different types " + Types.ToString(type1) + " and " + Types.ToString(type2));
+            return Types.ErrorType;
+        }
+        return Types.BoolType;
+
+    }
 }
 
 class LessNode extends BinaryExpNode
@@ -1221,6 +1493,26 @@ class LessNode extends BinaryExpNode
         p.print(" < ");
         myExp2.decompile(p, indent);
         p.print(")");
+    }
+    public int getType(int lineNum, int charNum){
+        int type1 = myExp1.getType();
+        int type2 = myExp2.getType();
+        int returnType = Types.BoolType;
+        if(type1 == Types.ErrorType || type2 == Types.ErrorType) {
+            Errors.fatal(lineNum, charNum, "Invalid expression for less operation");
+            return Types.ErrorType;
+        }
+        
+        if(type1 != Types.IntType) {
+            Errors.fatal(lineNum, charNum, "First operand of less is not an int");
+            returnType = Types.ErrorType;
+        }
+        if(type2 != Types.IntType) {
+            Errors.fatal(lineNum, charNum, "Second operand of less is not an int");
+            returnType = Types.ErrorType;
+        }
+        return returnType;
+
     }
 }
 
@@ -1237,6 +1529,26 @@ class GreaterNode extends BinaryExpNode
         myExp2.decompile(p, indent);
         p.print(")");
     }
+    public int getType(int lineNum, int charNum){
+        int type1 = myExp1.getType();
+        int type2 = myExp2.getType();
+        int returnType = Types.BoolType;
+        if(type1 == Types.ErrorType || type2 == Types.ErrorType) {
+            Errors.fatal(lineNum, charNum, "Invalid expression for greater");
+            return Types.ErrorType;
+        }
+        
+        if(type1 != Types.IntType) {
+            Errors.fatal(lineNum, charNum, "First operand of greater is not an int");
+            returnType = Types.ErrorType;
+        }
+        if(type2 != Types.IntType) {
+            Errors.fatal(lineNum, charNum, "Second operand of greater is not an int");
+            returnType = Types.ErrorType;
+        }
+        return returnType;
+
+    }
 }
 
 class LessEqNode extends BinaryExpNode
@@ -1251,6 +1563,27 @@ class LessEqNode extends BinaryExpNode
         p.print(" <= ");
         myExp2.decompile(p, indent);
         p.print(")");
+    }
+
+    public int getType(int lineNum, int charNum){
+        int type1 = myExp1.getType();
+        int type2 = myExp2.getType();
+        int returnType = Types.BoolType;
+        if(type1 == Types.ErrorType || type2 == Types.ErrorType) {
+            Errors.fatal(lineNum, charNum, "Invalid expression for less equals");
+            return Types.ErrorType;
+        }
+        
+        if(type1 != Types.IntType) {
+            Errors.fatal(lineNum, charNum, "First operand of less equals is not an int");
+            returnType = Types.ErrorType;
+        }
+        if(type2 != Types.IntType) {
+            Errors.fatal(lineNum, charNum, "Second operand of less equals is not an int");
+            returnType = Types.ErrorType;
+        }
+        return returnType;
+
     }
 }
 
@@ -1267,6 +1600,27 @@ class GreaterEqNode extends BinaryExpNode
         myExp2.decompile(p, indent);
         p.print(")");
     }
+
+    public int getType(int lineNum, int charNum){
+        int type1 = myExp1.getType();
+        int type2 = myExp2.getType();
+        int returnType = Types.BoolType;
+        if(type1 == Types.ErrorType || type2 == Types.ErrorType) {
+            Errors.fatal(lineNum, charNum, "Invalid expression for greater equals");
+            return Types.ErrorType;
+        }
+        
+        if(type1 != Types.IntType) {
+            Errors.fatal(lineNum, charNum, "First operand of greater equals is not an int");
+            returnType = Types.ErrorType;
+        }
+        if(type2 != Types.IntType) {
+            Errors.fatal(lineNum, charNum, "Second operand of greater equals is not an int");
+            returnType = Types.ErrorType;
+        }
+        return returnType;
+
+    }
 }
 
 //added to handle exp to the power of exp
@@ -1281,5 +1635,26 @@ class PowerNode extends BinaryExpNode
         p.print("**");
         myExp2.decompile(p, indent);
         p.print(")");
+    }
+
+    public int getType(int lineNum, int charNum){
+        int type1 = myExp1.getType();
+        int type2 = myExp2.getType();
+        int returnType = Types.IntType;
+        if(type1 == Types.ErrorType || type2 == Types.ErrorType) {
+            Errors.fatal(lineNum, charNum, "Invalid expression for power");
+            return Types.ErrorType;
+        }
+        
+        if(type1 != Types.IntType) {
+            Errors.fatal(lineNum, charNum, "First operand of power is not an int");
+            returnType = Types.ErrorType;
+        }
+        if(type2 != Types.IntType) {
+            Errors.fatal(lineNum, charNum, "Second operand of power is not an int");
+            returnType = Types.ErrorType;
+        }
+        return returnType;
+
     }
 }

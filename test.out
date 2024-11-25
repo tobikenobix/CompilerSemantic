@@ -1,51 +1,13 @@
 public class test (class) {
-  static int a (int);
-  static int to (int);
-  static boolean b (boolean);
-  static String c (String);
-  public static int isThisWorking (method int) (int x (int), int y (int)) {
-    int lol (int);
-    int j (int);
-    x (int) = 5;
-    {
-      boolean working (boolean);
-      a (int) = 10;
-      System.out.println(c (String));
-    }
-    if (!(c (String))) {
-      to (int) = 3;
-    } else {
-      j (int) = 0;
-    }
-  }
-  public static int test2 (method int) (String kl (String)) {
-    int n (int);
-    boolean working (boolean);
-    int hihi (int);
-    n (int) = isThisWorking (method int)(n (int), hihi (int));
-    n (int) = (-n (int));
-    n (int) = n (int);
-    a (int) = 3;
-    if (n (int)) {
-      n (int) = 10;
-    }
-    do {
-      n (int) = 9;
-      n (int) = isThisWorking (method int)();
-    } while ((a (int) > n (int)))
-    return hihi (int);
-  }
   public static void main (method void) () {
-    isThisWorking (method int)();
-    test2 (method int)();
-    System.out.println(c (String));
-    switch ((a (int) > to (int))) {
-      case true:
-        System.out.println(c (String));
-      case xyz (error):
-        a (int) = 5;
-      default:
-        a (int) = (to (int) + a (int));
-    }
+    int x (int);
+    int y (int);
+    int z (int);
+    boolean b (boolean);
+    String ello (String);
+    x (int) = (y (int) - z (int));
+    y (int) = (2 > z (int));
+    z (int) = (true <= "hallo");
+    b (boolean) = (z (int) <= x (int));
   }
 }

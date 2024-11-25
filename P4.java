@@ -67,6 +67,7 @@ public class P4 {
 	//debug(symTabList);
 	((ASTnode)root.value).decompile(outFile, 0);
 	outFile.close();
+	((ProgramNode)root.value).typeCheck();
 
 	return;
     }

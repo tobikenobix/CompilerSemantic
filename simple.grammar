@@ -5,9 +5,9 @@ Last modification: Tue Oct 29 10:14:48 UTC 2024
 program		::= PUBLIC CLASS id LCURLY classBody RCURLY
 		;
 
-classBody	::= declList
+classBody	::= declList (t)
 
-declList 	::= declList decl
+declList 	::= declList decl (t)
 		| /* epsilon */
 		;
 
@@ -18,8 +18,8 @@ decl		::= fieldDecl
 fieldDecl	::= STATIC type id SEMICOLON
 		;
 
-methodDecl	::= PUBLIC STATIC VOID id formals methodBody // no return value
-                | PUBLIC STATIC INT id formals methodBody // int return value allowed
+methodDecl	::= PUBLIC STATIC VOID id formals methodBody // no return value (t)
+                | PUBLIC STATIC INT id formals methodBody // int return value allowed (t)
 	        ;						
 
 formals		::= LPAREN RPAREN
@@ -43,7 +43,7 @@ varDeclList	::= varDeclList varDecl
 varDecl		::= type id SEMICOLON
 		;
 
-stmtList	::= stmtList stmt
+stmtList	::= stmtList stmt (t)
 		| /* epsilon */
 		;
 
@@ -61,8 +61,8 @@ switchLabel	::=   CASE exp COLON
 		|     DEFAULT COLON
 		;      
 		     
-stmt		::= PRINT LPAREN exp RPAREN SEMICOLON
-	        | id ASSIGN exp SEMICOLON
+stmt		::= PRINT LPAREN exp RPAREN SEMICOLON (t under assumption everything can be printed)
+	        | id ASSIGN exp SEMICOLON (t)
 	        | IF LPAREN exp RPAREN LCURLY stmtList RCURLY
 	        | IF LPAREN exp RPAREN LCURLY stmtList RCURLY ELSE LCURLY stmtList RCURLY
 	        | DO LCURLY stmtList RCURLY WHILE LPAREN exp RPAREN 
@@ -74,30 +74,30 @@ stmt		::= PRINT LPAREN exp RPAREN SEMICOLON
 		| SWITCH LPAREN exp RPAREN LCURLY switchGroupList RCURLY
 		;
 
-exp		::= exp PLUS exp
-	        | exp MINUS exp
-	        | exp TIMES exp
-	        | exp DIVIDE exp
-	        | NOT exp
-	        | exp AND exp
-	        | exp OR exp
-		| exp EQUALS exp
-		| exp NOTEQUALS exp
-		| exp LESS exp
-		| exp GREATER exp
-		| exp LESSEQ exp
-		| exp GREATEREQ exp
+exp		::= exp PLUS exp (t)
+	        | exp MINUS exp (t)
+	        | exp TIMES exp (t)
+	        | exp DIVIDE exp (t)
+	        | NOT exp (t)
+	        | exp AND exp (t)
+	        | exp OR exp (t)
+		| exp EQUALS exp (t)
+		| exp NOTEQUALS exp (t)
+		| exp LESS exp (t)
+		| exp GREATER exp (t)
+		| exp LESSEQ exp (t)
+		| exp GREATEREQ exp (t)
 		| exp POWER exp  // potentiation operator, right-assoc -> NOTE: YOU NEED to add the
-		      	    	 // ** token to  the scanner implementation
-		| MINUS exp
-		| id
-	        | INTLITERAL
-	        | STRINGLITERAL
-	        | TRUE
-	        | FALSE
-	        | LPAREN exp RPAREN
-	        | id LPAREN RPAREN   	      // function call with no args
-	        | id LPAREN actualList RPAREN // with args
+		      	    	 // ** token to  the scanner implementation (t)
+		| MINUS exp (t)
+		| id (t)
+	        | INTLITERAL (t)
+	        | STRINGLITERAL (t)
+	        | TRUE (t)
+	        | FALSE (t)
+	        | LPAREN exp RPAREN (t)
+	        | id LPAREN RPAREN   	      // function call with no args (t)
+	        | id LPAREN actualList RPAREN // with args (t for return value, arguments not yet checked)
 		
 		;
 
