@@ -1,13 +1,37 @@
 public class test (class) {
-  public static void main (method void) () {
+  static boolean bbb (boolean);
+  static String s (String);
+  public static void f (method void) () {
     int x (int);
     int y (int);
     int z (int);
-    boolean b (boolean);
-    String ello (String);
-    x (int) = (y (int) - z (int));
-    y (int) = (2 > z (int));
-    z (int) = (true <= "hallo");
-    b (boolean) = (z (int) <= x (int));
+    x (int) = 1;
+    z (int) = 2;
+    {
+      int x (int);
+      x (int) = 2;
+      y (int) = x (int);
+    }
+    y (int) = x (int);
+    switch ((y (int) * 2)) {
+      case 0:
+        x (int) = z (int);
+      case 2:
+        x (int) = (z (int) * z (int));
+      case 4:
+        x (int) = ((z (int) * z (int)) * z (int));
+      default:
+        x (int) = 0;
+    }
+  }
+  public static void main (method void) () {
+    int aaa (int);
+    aaa (int) = (f (method void) + f (method void));
+    bbb (boolean) = (f (method void) == 3);
+    bbb (boolean) = (f (method void) > main (method void));
+    aaa (int) = (aaa (int) + !(false));
+    aaa (int) = (aaa (int) + "foo");
+    bbb (boolean) = aaa (int);
+    bbb (boolean) = ((aaa (int) + true) && (bbb (boolean) < true));
   }
 }

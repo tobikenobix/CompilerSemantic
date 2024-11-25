@@ -63,15 +63,15 @@ switchLabel	::=   CASE exp COLON
 		     
 stmt		::= PRINT LPAREN exp RPAREN SEMICOLON (t under assumption everything can be printed)
 	        | id ASSIGN exp SEMICOLON (t)
-	        | IF LPAREN exp RPAREN LCURLY stmtList RCURLY
-	        | IF LPAREN exp RPAREN LCURLY stmtList RCURLY ELSE LCURLY stmtList RCURLY
-	        | DO LCURLY stmtList RCURLY WHILE LPAREN exp RPAREN 
-		| RETURN SEMICOLON
+	        | IF LPAREN exp RPAREN LCURLY stmtList RCURLY (t)
+	        | IF LPAREN exp RPAREN LCURLY stmtList RCURLY ELSE LCURLY stmtList RCURLY (t)
+	        | DO LCURLY stmtList RCURLY WHILE LPAREN exp RPAREN (t)
+		| RETURN SEMICOLON (t not needed)
 		| RETURN exp SEMICOLON // return with a value
-	        | id LPAREN RPAREN SEMICOLON  	  // function call with no args
-	        | id LPAREN actualList RPAREN SEMICOLON // with args
-		| LCURLY varDeclList stmtList RCURLY  // nested block
-		| SWITCH LPAREN exp RPAREN LCURLY switchGroupList RCURLY
+	        | id LPAREN RPAREN SEMICOLON  	  // function call with no args (t not needed)
+	        | id LPAREN actualList RPAREN SEMICOLON // with args (t)
+		| LCURLY varDeclList stmtList RCURLY  // nested block (t)
+		| SWITCH LPAREN exp RPAREN LCURLY switchGroupList RCURLY (t)
 		;
 
 exp		::= exp PLUS exp (t)

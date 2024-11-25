@@ -128,6 +128,7 @@ abstract class ASTnode {
 // MethodBodyNode, StmtListNode, ExpListNode, SwitchGroupListNode
 // **********************************************************************
 class ProgramNode extends ASTnode {
+    public static boolean errorNameAnalysis = false;
     public ProgramNode(IdNode id, ClassBodyNode classBody) {
 	myId = id;
 	myClassBody = classBody;
@@ -148,6 +149,10 @@ class ProgramNode extends ASTnode {
     }
 
     public void typeCheck(){
+        if(errorNameAnalysis){
+            Errors.fatal(0, 0, "Name analysis failed, not starting with type check");
+            return;
+        }
         myClassBody.typeCheck();
     }
 
@@ -168,8 +173,15 @@ class ClassBodyNode extends ASTnode {
         myDeclList.nameAnalysis(symTabList, scope);
         //check if the main method is declared
         SymbolTable symTabScope = symTabList.get(symTabList.size()-2);
-        if(symTabScope.lookup("main") == null || symTabScope.lookup("main").type() != Types.MethodTypeVoid){
+        boolean mainDeclared = false;
+        for (SymbolTable symTab: symTabList){
+            if(symTab.lookup("main") != null && symTab.lookup("main").type() == Types.MethodTypeVoid){
+                mainDeclared = true;
+            }
+        }
+        if(!mainDeclared){
             Errors.fatal(0, 0, "No main method declared");
+            ProgramNode.errorNameAnalysis = true;
         }
     }
 
@@ -403,6 +415,17 @@ class SwitchGroupListNode extends ASTnode {
         }
     }
 
+    public void typeCheck(){
+        try {
+            for (mySwitchGroups.start(); mySwitchGroups.isCurrent(); mySwitchGroups.advance()) {
+                ((SwitchGroupNode)mySwitchGroups.getCurrent()).typeCheck();
+            }
+        } catch (NoCurrentException ex) {
+            System.err.println("unexpected NoCurrentException in SwitchGroupList.typeCheck");
+            System.exit(-1);
+        }
+    }
+
     // sequence of kids (SwitchGroupNodes)
     private Sequence mySwitchGroups;
 }
@@ -520,6 +543,7 @@ class MethodDeclNodeInt extends MethodDeclNode {
         //check if the method has a return statement
         if(symTabList.getFirst().lookup("return") == null){
             Errors.fatal(myId.getLineNum(), myId.getCharNum(), "Method must have a return statement");
+            ProgramNode.errorNameAnalysis = true;
         }
 
         symTabList.removeFirst(); //TODO recheck, this removes the scope of the method "leaving" it
@@ -621,6 +645,7 @@ class StringNode extends TypeNode
 // **********************************************************************
 abstract class SwitchLabelNode extends ASTnode {
     public abstract void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope);
+    public abstract void typeCheck();
 }
 
 class SwitchLabelNodeCase extends SwitchLabelNode {
@@ -638,6 +663,12 @@ class SwitchLabelNodeCase extends SwitchLabelNode {
         myExp.decompile(p, indent);
         p.println(":");
     }
+
+    public void typeCheck(){
+        if (!(myExp instanceof IntLitNode)){
+            Errors.fatal(0, 0, "Case expression must be an integer literal");
+        }
+    }
     // 1 kid
     private ExpNode myExp;
 }
@@ -652,6 +683,9 @@ class SwitchLabelNodeDefault extends SwitchLabelNode {
     public void decompile(PrintWriter p, int indent) {
         doIndent(p, indent);
         p.println("default:");
+    }
+    public void typeCheck(){
+        //do nothing
     }
 }
 // **********************************************************************
@@ -671,6 +705,10 @@ class SwitchGroupNode extends ASTnode {
     public void decompile(PrintWriter p, int indent) {
         mySwitchLabelNode.decompile(p, indent);
         myStmtList.decompile(p, indent+2);
+    }
+    public void typeCheck(){
+        myStmtList.typeCheck();
+        mySwitchLabelNode.typeCheck();
     }
     // 2 kids
     private StmtListNode myStmtList;
@@ -764,6 +802,21 @@ class IfStmtNode extends StmtNode {
         p.println("}");
     }
 
+    // TODO: if time is left, think about implementing a getlineNum and getcharNum method for ExpNode
+    public void typeCheck(){
+        int myExpType = myExp.getType();
+        if(myExp instanceof UnaryExpNode){
+            myExpType = ((UnaryExpNode)myExp).getType(0, 0);
+        }
+        if(myExp instanceof BinaryExpNode){
+            myExpType = ((BinaryExpNode)myExp).getType(0, 0);
+        }
+        if(myExpType != Types.BoolType){
+            Errors.fatal(0, 0, "Non-boolean expression used as an if condition");
+        }
+        myStmtList.typeCheck();
+    }
+
     // 2 kids
     private ExpNode myExp;
     private StmtListNode myStmtList;
@@ -795,6 +848,21 @@ class IfElseStmtNode extends StmtNode {
         myElseStmtList.nameAnalysis(symTabList, scope);
     }
 
+    public void typeCheck(){
+        int myExpType = myExp.getType();
+        if(myExp instanceof UnaryExpNode){
+            myExpType = ((UnaryExpNode)myExp).getType(0, 0);
+        }
+        if(myExp instanceof BinaryExpNode){
+            myExpType = ((BinaryExpNode)myExp).getType(0, 0);
+        }
+        if(myExpType != Types.BoolType){
+            Errors.fatal(0, 0, "Non-boolean expression used as an if condition");
+        }
+        myThenStmtList.typeCheck();
+        myElseStmtList.typeCheck();
+    }
+
     // 3 kids
     private ExpNode myExp;
     private StmtListNode myThenStmtList;
@@ -819,6 +887,20 @@ class WhileStmtNode extends StmtNode {
         p.print("} while (");
         myExp.decompile(p, indent);
         p.println(")");
+    }
+
+    public void typeCheck(){
+        int myExpType = myExp.getType();
+        if(myExp instanceof UnaryExpNode){
+            myExpType = ((UnaryExpNode)myExp).getType(0, 0);
+        }
+        if(myExp instanceof BinaryExpNode){
+            myExpType = ((BinaryExpNode)myExp).getType(0, 0);
+        }
+        if(myExpType != Types.BoolType){
+            Errors.fatal(0, 0, "Non-boolean expression used as a while condition");
+        }
+        myStmtList.typeCheck();
     }
 
     // 2 kids
@@ -885,6 +967,19 @@ class ReturnWithValueNode extends StmtNode {
         p.println(";");
     }
 
+    public void typeCheck(){
+        int myExpType = myExp.getType();
+        if(myExp instanceof UnaryExpNode){
+            myExpType = ((UnaryExpNode)myExp).getType(0, 0);
+        }
+        if(myExp instanceof BinaryExpNode){
+            myExpType = ((BinaryExpNode)myExp).getType(0, 0);
+        }
+        if(myExpType != Types.IntType){
+            Errors.fatal(0, 0, "Return type does not match method return type int");
+        }
+    }
+
     // 1 kid
     private ExpNode myExp;
 }
@@ -910,6 +1005,10 @@ class BlockStmtNode extends StmtNode {
         doIndent(p, indent);
         p.println("}");
     }
+
+    public void typeCheck(){
+        myStmts.typeCheck();
+    }
     // 2 kids
     private DeclListNode myVarDecls;
     private StmtListNode myStmts;
@@ -933,6 +1032,20 @@ class SwitchStmtNode extends StmtNode {
         mySwitchGroupList.decompile(p, indent+2);
         doIndent(p, indent);
         p.println("}");
+    }
+
+    public void typeCheck(){
+        int myExpType = myExp.getType();
+        if(myExp instanceof UnaryExpNode){
+            myExpType = ((UnaryExpNode)myExp).getType(0, 0);
+        }
+        if(myExp instanceof BinaryExpNode){
+            myExpType = ((BinaryExpNode)myExp).getType(0, 0);
+        }
+        if(myExpType != Types.IntType){
+            Errors.fatal(0, 0, "Switch expression must be of type int");
+        }
+        mySwitchGroupList.typeCheck();
     }
 
     // 2 kids
@@ -1040,11 +1153,16 @@ class IdNode extends ExpNode
     // check if idNode already exists in the symbol table and insert it if it doesn't
     public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope, int type) {
         boolean exists = false;
+        //not allowed to redeclare a varialbe with differnt type in any scope - I am not sure if this is needed
         for (SymbolTable symTab: symTabList) {
-            if (symTab.lookup(myStrVal) != null) {
-                exists = true;
+            if (symTab.lookup(myStrVal) != null && symTab.lookup(myStrVal).type() != type) {
+               exists = true;
                 
-            }
+           }
+        }
+        //not allowed to redeclare a variable in the same scope
+        if(symTabList.getFirst().lookup(myStrVal) != null) {
+            exists = true;
         }
         if (!exists) {
             symTabList.getFirst().insert(myStrVal, type);
@@ -1052,6 +1170,7 @@ class IdNode extends ExpNode
         } else {
             myType = Types.ErrorType;
             Errors.fatal(myLineNum, myCharNum, "Multiply declared identifier");
+            ProgramNode.errorNameAnalysis = true;
         }
     }
     // check if idNode exists in the symbol table and set the type of the idNode
@@ -1066,6 +1185,7 @@ class IdNode extends ExpNode
         if (!exists) {
             myType = Types.ErrorType;
             Errors.fatal(myLineNum, myCharNum, "Undeclared identifier");
+            ProgramNode.errorNameAnalysis = true;
         }
     }
 
