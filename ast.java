@@ -276,7 +276,6 @@ class FormalsListNode extends ASTnode {
     }
 
     // TODO: verify no typecheck needed
-
   // sequence of kids (FormalDeclNodes)
     private Sequence myFormals;
 }
@@ -1380,7 +1379,13 @@ class MinusNode extends BinaryExpNode
 
     public int getType(int lineNum, int charNum){
         int type1 = myExp1.getType();
+        if (myExp1 instanceof BinaryExpNode){
+            type1 = ((BinaryExpNode)myExp1).getType(lineNum, charNum);
+        }
         int type2 = myExp2.getType();
+        if (myExp2 instanceof BinaryExpNode){
+            type2 = ((BinaryExpNode)myExp2).getType(lineNum, charNum);
+        }
         int returnType = Types.IntType;
         if(type1 == Types.ErrorType || type2 == Types.ErrorType) {
             Errors.fatal(lineNum, charNum, "Invalid expression for subtraction");
@@ -1415,7 +1420,13 @@ class TimesNode extends BinaryExpNode
     }
     public int getType(int lineNum, int charNum){
         int type1 = myExp1.getType();
+        if (myExp1 instanceof BinaryExpNode){
+            type1 = ((BinaryExpNode)myExp1).getType(lineNum, charNum);
+        }
         int type2 = myExp2.getType();
+        if (myExp2 instanceof BinaryExpNode){
+            type2 = ((BinaryExpNode)myExp2).getType(lineNum, charNum);
+        }
         int returnType = Types.IntType;
         if(type1 == Types.ErrorType || type2 == Types.ErrorType) {
             Errors.fatal(lineNum, charNum, "Invalid expression for multiplication");
@@ -1450,7 +1461,13 @@ class DivideNode extends BinaryExpNode
     }
     public int getType(int lineNum, int charNum){
         int type1 = myExp1.getType();
+        if (myExp1 instanceof BinaryExpNode){
+            type1 = ((BinaryExpNode)myExp1).getType(lineNum, charNum);
+        }
         int type2 = myExp2.getType();
+        if (myExp2 instanceof BinaryExpNode){
+            type2 = ((BinaryExpNode)myExp2).getType(lineNum, charNum);
+        }
         int returnType = Types.IntType;
         if(type1 == Types.ErrorType || type2 == Types.ErrorType) {
             Errors.fatal(lineNum, charNum, "Invalid expression for division");
@@ -1485,7 +1502,13 @@ class AndNode extends BinaryExpNode
     }
     public int getType(int lineNum, int charNum){
         int type1 = myExp1.getType();
+        if (myExp1 instanceof BinaryExpNode){
+            type1 = ((BinaryExpNode)myExp1).getType(lineNum, charNum);
+        }
         int type2 = myExp2.getType();
+        if (myExp2 instanceof BinaryExpNode){
+            type2 = ((BinaryExpNode)myExp2).getType(lineNum, charNum);
+        }
         int returnType = Types.BoolType;
         if(type1 == Types.ErrorType || type2 == Types.ErrorType) {
             Errors.fatal(lineNum, charNum, "Invalid expression for and");
@@ -1520,7 +1543,13 @@ class OrNode extends BinaryExpNode
     }
     public int getType(int lineNum, int charNum){
         int type1 = myExp1.getType();
+        if (myExp1 instanceof BinaryExpNode){
+            type1 = ((BinaryExpNode)myExp1).getType(lineNum, charNum);
+        }
         int type2 = myExp2.getType();
+        if (myExp2 instanceof BinaryExpNode){
+            type2 = ((BinaryExpNode)myExp2).getType(lineNum, charNum);
+        }
         int returnType = Types.BoolType;
         if(type1 == Types.ErrorType || type2 == Types.ErrorType) {
             Errors.fatal(lineNum, charNum, "Invalid expression for or");
@@ -1759,7 +1788,13 @@ class PowerNode extends BinaryExpNode
 
     public int getType(int lineNum, int charNum){
         int type1 = myExp1.getType();
+        if (myExp1 instanceof BinaryExpNode){
+            type1 = ((BinaryExpNode)myExp1).getType(lineNum, charNum);
+        }
         int type2 = myExp2.getType();
+        if (myExp2 instanceof BinaryExpNode){
+            type2 = ((BinaryExpNode)myExp2).getType(lineNum, charNum);
+        }
         int returnType = Types.IntType;
         if(type1 == Types.ErrorType || type2 == Types.ErrorType) {
             Errors.fatal(lineNum, charNum, "Invalid expression for power");
