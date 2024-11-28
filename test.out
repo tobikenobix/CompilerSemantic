@@ -18,8 +18,6 @@ public class test (class) {
         x (int) = z (int);
       case 2:
         x (int) = (z (int) * z (int));
-      case 4:
-        x (int) = ((z (int) * z (int)) * z (int));
       default:
         x (int) = 0;
     }

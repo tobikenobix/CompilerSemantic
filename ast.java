@@ -1,6 +1,7 @@
 import java.io.*;
 import java.util.LinkedList;
-
+import java.util.NoSuchElementException;
+import java.util.ArrayList;;
 // **********************************************************************
 // The ASTnode class defines the nodes of the abstract-syntax tree that
 // represents a "Simple" program.
@@ -250,6 +251,7 @@ class FormalsListNode extends ASTnode {
         try {
             for (myFormals.start(); myFormals.isCurrent(); myFormals.advance()) {
                 ((FormalDeclNode)myFormals.getCurrent()).nameAnalysis(symTabList, scope);
+                myList.add(((FormalDeclNode)myFormals.getCurrent()).getType());
             }
         } catch (NoCurrentException ex) {
             System.err.println("unexpected NoCurrentException in FormalsListNode.nameAnalysis");
@@ -275,9 +277,17 @@ class FormalsListNode extends ASTnode {
         p.print(")");
     }
 
-    // TODO: verify no typecheck needed
+    public ArrayList<Integer> getFormalList(){
+        return myList;
+    }
+
+    public int length(){
+        return myFormals.length();
+    }
+
   // sequence of kids (FormalDeclNodes)
     private Sequence myFormals;
+    private ArrayList <Integer> myList = new ArrayList<Integer>();
 }
 
 class MethodBodyNode extends ASTnode {
@@ -364,6 +374,21 @@ class ExpListNode extends ASTnode {
             System.exit(-1);
         }
     }
+    public void methodeNameAnlysis(LinkedList<SymbolTable> symTabList, int scope){
+        try {
+            for (myExps.start(); myExps.isCurrent(); myExps.advance()) {
+                ((ExpNode)myExps.getCurrent()).lookup(symTabList, scope);
+                if(((ExpNode)myExps.getCurrent())instanceof BinaryExpNode){
+                    myList.add(((BinaryExpNode)myExps.getCurrent()).getType(0,0));
+                } else{
+                    myList.add(((ExpNode)myExps.getCurrent()).getType());
+                }
+            }
+        } catch (NoCurrentException ex) {
+            System.err.println("unexpected NoCurrentException in ExpListNode.nameAnalysis");
+            System.exit(-1);
+        }
+    }
     public void decompile(PrintWriter p, int indent) {
         p.print("(");
         boolean first = true;
@@ -381,9 +406,16 @@ class ExpListNode extends ASTnode {
         }
         p.print(")");
     }
+    public int length(){
+        return myExps.length();
+    }
+    public ArrayList<Integer> getExpList(){
+        return myList;
+    }
 
     // sequence of kids (ExpNodes)
     private Sequence myExps;
+    private ArrayList <Integer> myList = new ArrayList<Integer>();
 }
 
 // maybe add a nameAnalysis method to this class
@@ -458,7 +490,6 @@ class FieldDeclNode extends DeclNode {
 	p.println(";");
     }
 
-    // TODO: verify no typecheck needed
 
     // 2 kids
     private TypeNode myType;
@@ -483,7 +514,6 @@ class VarDeclNode extends DeclNode {
         p.println(";");
     }
 
-    // TODO: verify no typecheck needed
 
     // 2 kids
     private TypeNode myType;
@@ -498,7 +528,7 @@ class MethodDeclNode extends DeclNode {
 	myBody = body;
     }
     public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
-        myId.nameAnalysis(symTabList, scope, Types.MethodTypeVoid);
+        myId.methodNameAnalyisis(symTabList, scope, Types.MethodTypeVoid,myFormalsList);
         myFormalsList.nameAnalysis(symTabList, scope);
         myBody.nameAnalysis(symTabList, scope);
     }
@@ -518,6 +548,10 @@ class MethodDeclNode extends DeclNode {
         myBody.typeCheck();
     }
 
+    public FormalsListNode getFormalList (){
+        return myFormalsList;
+    }
+
     // 3 kids
     private IdNode myId;
     private FormalsListNode myFormalsList;
@@ -535,7 +569,7 @@ class MethodDeclNodeInt extends MethodDeclNode {
     }
 
     public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
-        myId.nameAnalysis(symTabList, scope, Types.MethodTypeInt);
+        myId.methodNameAnalyisis(symTabList, scope, Types.MethodTypeInt, myFormalsList);
         myFormalsList.nameAnalysis(symTabList, scope); 
         myBody.nameAnalysis(symTabList, scope);
         
@@ -545,7 +579,7 @@ class MethodDeclNodeInt extends MethodDeclNode {
             ProgramNode.errorNameAnalysis = true;
         }
 
-        symTabList.removeFirst(); //TODO recheck, this removes the scope of the method "leaving" it
+        symTabList.removeFirst(); 
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -561,6 +595,10 @@ class MethodDeclNodeInt extends MethodDeclNode {
 
     public void typeCheck(){
         myBody.typeCheck();
+    }
+
+    public FormalsListNode getFormalList (){
+        return myFormalsList;
     }
 
     // 3 kids
@@ -584,6 +622,9 @@ class FormalDeclNode extends DeclNode {
         p.print(" ");
         myId.decompile(p, indent);
 
+    }
+    public int getType(){
+        return myId.getType();
     }
 
     // 2 kids
@@ -719,10 +760,7 @@ class SwitchGroupNode extends ASTnode {
 // **********************************************************************
 abstract class StmtNode extends ASTnode {
     public abstract void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope);
-    //TODO: make it abstract and implement in all subclasses
-    public void typeCheck(){
-        //do nothing
-    }
+    public abstract void typeCheck();
 }
 
 class PrintStmtNode extends StmtNode {
@@ -738,6 +776,11 @@ class PrintStmtNode extends StmtNode {
         p.print("System.out.println(");
         myExp.decompile(p, indent);
         p.println(");");
+    }
+    public void typeCheck(){
+        if (myExp.getType() != Types.StringType){
+            Errors.fatal(0, 0, "Attempt to print " + Types.ToString(myExp.getType()) + " as a string");
+        }
     }
     //assuming you can print any type so no typecheck done here
     // 1 kid
@@ -801,7 +844,6 @@ class IfStmtNode extends StmtNode {
         p.println("}");
     }
 
-    // TODO: if time is left, think about implementing a getlineNum and getcharNum method for ExpNode
     public void typeCheck(){
         int myExpType = myExp.getType();
         if(myExp instanceof UnaryExpNode){
@@ -919,24 +961,37 @@ class CallStmtNode extends StmtNode {
     }
 
     public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope) {
-        //for (SymbolTable symTab: symTabList){
-          //  System.out.println(symTab.toString());
-        //}
         myId.lookup(symTabList, scope);
-        myExpList.nameAnalysis(symTabList, scope);
+        myExpList.methodeNameAnlysis(symTabList, scope);
+        usedArgsList = myExpList.getExpList();
     }
 
     public void decompile(PrintWriter p, int indent) {
         myId.decompile(p, indent);
         myExpList.decompile(p, indent);
         p.println(";");
-        //p.println("();");
-
     }
+ 
+    public void typeCheck(){
+        if(myId.getType() == Types.MethodTypeVoid || myId.getType() == Types.MethodTypeInt){
+            ArrayList<Integer> myFormalList = myId.getArgs().list().getFormalList();
+           if (myExpList.length() != myId.getArgs().list().length()){
+               Errors.fatal(myId.getLineNum(), myId.getCharNum(), "Method call argument length mismatch");
+           } else{
+                for (int i = 0; i < myExpList.length(); i++){
+                    if (myFormalList.get(i) != usedArgsList.get(i)){
+                        Errors.fatal(myId.getLineNum(),myId.getCharNum(), "Method call argument type mismatch");
+                    }
+                }
+           }
+        }
+    }
+    
 
     // 2 kids
     private IdNode myId;
     private ExpListNode myExpList;
+    private ArrayList<Integer> usedArgsList = new ArrayList<Integer>();
 }
 
 class ReturnStmtNode extends StmtNode {
@@ -948,6 +1003,9 @@ class ReturnStmtNode extends StmtNode {
 
     public void decompile(PrintWriter p, int indent) {
         p.println("return;");
+    }
+    public void typeCheck(){
+        //do nothing
     }
 }
 // this helper class has been added to handle return statements with values
@@ -994,7 +1052,7 @@ class BlockStmtNode extends StmtNode {
         symTabList.addFirst(symTab); // new scope
         myVarDecls.nameAnalysis(symTabList, scope);
         myStmts.nameAnalysis(symTabList, scope);
-        symTabList.removeFirst(); //TODO recheck, this removes the scope of the block "leaving" it
+        symTabList.removeFirst(); 
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -1055,12 +1113,10 @@ class SwitchStmtNode extends StmtNode {
 // **********************************************************************
 // ExpNode and its subclasses
 // **********************************************************************
-//TODO check all classes that extend ExpNode to see if they need a lookup or nameAnalysis method
 abstract class ExpNode extends ASTnode {
     public void lookup(LinkedList<SymbolTable> symTabList, int scope) {
     }
     //used to get the type of the expression according to Types.java.
-    // TODO: make it abstract and implement it in all subclasses
     public  int getType(){
         return Types.ErrorType;
     } 
@@ -1152,13 +1208,14 @@ class IdNode extends ExpNode
     // check if idNode already exists in the symbol table and insert it if it doesn't
     public void nameAnalysis(LinkedList<SymbolTable> symTabList, int scope, int type) {
         boolean exists = false;
-        //not allowed to redeclare a varialbe with differnt type in any scope - I am not sure if this is needed
-        for (SymbolTable symTab: symTabList) {
-            if (symTab.lookup(myStrVal) != null && symTab.lookup(myStrVal).type() != type) {
-               exists = true;
+        //once used to check all scopes encapuslating the current scope, commented out since shadowing is allowed
+        //commented instead of removed to keep the code for future reference
+        //for (SymbolTable symTab: symTabList) {
+        //    if (symTab.lookup(myStrVal) != null && symTab.lookup(myStrVal).type() != type) {
+        //       exists = true;
                 
-           }
-        }
+        //   }
+        //}
         //not allowed to redeclare a variable in the same scope
         if(symTabList.getFirst().lookup(myStrVal) != null) {
             exists = true;
@@ -1171,6 +1228,33 @@ class IdNode extends ExpNode
             Errors.fatal(myLineNum, myCharNum, "Multiply declared identifier");
             ProgramNode.errorNameAnalysis = true;
         }
+        
+    }
+
+    public void methodNameAnalyisis(LinkedList<SymbolTable> symTabList, int scope, int type, FormalsListNode symArgTabList) {
+        boolean exists = false;
+        SymbolTable symTab = symTabList.getFirst();
+        if (symTab.lookup(myStrVal) != null) {
+            exists = true;
+            myType = symTab.lookup(myStrVal).type();
+        }
+        
+        if (!exists) {
+            symTabList.getFirst().insert(myStrVal, type, symArgTabList);
+            myType = type;
+        } else {
+            myType = Types.ErrorType;
+            Errors.fatal(myLineNum, myCharNum, "Multiply declared identifier");
+            ProgramNode.errorNameAnalysis = true;
+        }
+    }
+    public SymbolTable.Sym getArgs(){
+        for (SymbolTable symTab: symArgTabList) {
+            if (symTab.lookup(myStrVal) != null) {
+                return symTab.lookup(myStrVal);
+            }
+        } 
+        return null; 
     }
     // check if idNode exists in the symbol table and set the type of the idNode
     public void lookup(LinkedList<SymbolTable> symTabList, int scope) {
@@ -1180,6 +1264,7 @@ class IdNode extends ExpNode
                 exists = true;
                 myType = symTab.lookup(myStrVal).type();
             }
+            symArgTabList = symTabList;
         }
         if (!exists) {
             myType = Types.ErrorType;
@@ -1196,6 +1281,7 @@ class IdNode extends ExpNode
     private int myCharNum;
     private String myStrVal;
     private int myType;
+    private LinkedList<SymbolTable> symArgTabList;
 
     public String getStrVal() {
         return myStrVal;
@@ -1225,7 +1311,20 @@ class CallExpNode extends ExpNode {
 
     public void lookup(LinkedList<SymbolTable> symTabList, int scope) {
         myId.lookup(symTabList, scope);
-        myExpList.nameAnalysis(symTabList, scope);
+        myExpList.methodeNameAnlysis(symTabList, scope);
+        usedArgsList = myExpList.getExpList();
+        if(myId.getType() == Types.MethodTypeInt){
+            ArrayList<Integer> myFormalList = myId.getArgs().list().getFormalList();
+            if(myExpList.length() != myId.getArgs().list().length()){
+                Errors.fatal(myId.getLineNum(), myId.getCharNum(), "Method call argument length mismatch");
+            } else{
+                for (int i = 0; i < myExpList.length(); i++){
+                    if (myFormalList.get(i) != usedArgsList.get(i)){
+                        Errors.fatal(myId.getLineNum(),myId.getCharNum(), "Method call argument type mismatch");
+                    }
+                }
+            }
+        }
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -1244,6 +1343,7 @@ class CallExpNode extends ExpNode {
     // 2 kids
     private IdNode myId;
     private ExpListNode myExpList;
+    private ArrayList<Integer> usedArgsList = new ArrayList<Integer>();
 }
 
 abstract class UnaryExpNode extends ExpNode {

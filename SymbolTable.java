@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Hashtable;
 
 public class SymbolTable {
@@ -7,12 +8,22 @@ public class SymbolTable {
 			myName = id;
 			myType = t; 
 		}
+
+		//attach list for method
+		public Sym(String id, int t, FormalsListNode list) {
+			myName = id;
+			myType = t;
+			myList = list;
+		}
+
 		public String name () { return myName; }
 		public int type () { return myType; }
+		public FormalsListNode list() { return myList; }
 
 		// private fields
 		private String myName;
 		private int myType;
+		private FormalsListNode myList;
     };
 
     Hashtable table;
@@ -30,6 +41,14 @@ public class SymbolTable {
 		table.put(name, sym);
 		return sym;
     }
+
+	public Sym insert (String name, int type, FormalsListNode list) {
+		if (table.containsKey(name))
+			return (Sym) table.get(name);
+		Sym sym = new Sym(name, type, list);
+		table.put(name, sym);
+		return sym;
+	}
 
 	@Override
 	public String toString() {
