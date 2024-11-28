@@ -1,52 +1,41 @@
-public class test {
-  static boolean bbb;
-  static String s;
+// a correclty implemented simple program
 
-  public static void f() {
-     int x;
-     int y;
-     int z;
-     
-     x = 1;
-     z = 2;
+public class soFancy {
 
-     {
-        // testing that compound statements with variable declarations work
-        int x;  // this is allowed, and shadows the x above 
-	x = 2;  
-        y = x;  // when executed y will have value 2 here not 1
-     }
+  //declaring static vars for my super fancy programming language
+  static int bestNumber;
+  static String superString;
+  static boolean soMuchTruth;
 
-     y = x;  // this y will have value 1
-     
-     switch (y * 2) {
-     case 0:
-      x = z;
-     case 2:
-      x = z * z;
-     default:
-      x = 0;
-      }
+  //declaring some functions that do some cool stuff
 
-
-
+  public static void testMyBool(boolean b){
+    if (bestNumber < 3){
+      System.out.println("wow that works");
+    }
   }
 
-  public static void main() {
-    int aaa;
+  public static int timeToSwitch(int a, boolean iLikeLooping){
+    do {
+      switch(a){
+        case 1: return bestNumber;
+        case 2: return 2;
+        default: System.out.println("Damn");
+      }
+    } while (iLikeLooping == true)
+    return a;
+  }
+  
 
-    // some errors involving methods
-    aaa = f + f;
-    bbb = f == 3;
-    bbb = f > main;
+  //in main I call them all
 
-    // other type errors
-    aaa = aaa + (!false);
-    aaa = aaa + "foo";
-    bbb = aaa;
-
-    // don't give too many or too few error messages here
-    bbb = (aaa + true) && (bbb < true);
+  public static void main(){
+    int gimmeNumber;
+    int aNumber;
+    boolean noIdont;
+    aNumber =3;
+    noIdont = false;
+    gimmeNumber = timeToSwitch(3**3**2, noIdont);
+    testMyBool(aNumber != gimmeNumber);
   }
 }
-

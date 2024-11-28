@@ -1,35 +1,32 @@
-public class test (class) {
-  static boolean bbb (boolean);
-  static String s (String);
-  public static void f (method void) () {
-    int x (int);
-    int y (int);
-    int z (int);
-    x (int) = 1;
-    z (int) = 2;
-    {
-      int x (int);
-      x (int) = 2;
-      y (int) = x (int);
-    }
-    y (int) = x (int);
-    switch ((y (int) * 2)) {
-      case 0:
-        x (int) = z (int);
-      case 2:
-        x (int) = (z (int) * z (int));
-      default:
-        x (int) = 0;
+public class soFancy (class) {
+  static int bestNumber (int);
+  static String superString (String);
+  static boolean soMuchTruth (boolean);
+  public static void testMyBool (method void) (boolean b (boolean)) {
+    if ((bestNumber (int) < 3)) {
+      System.out.println("wow that works");
     }
   }
+  public static int timeToSwitch (method int) (int a (int), boolean iLikeLooping (boolean)) {
+    do {
+      switch (a (int)) {
+        case 1:
+          return bestNumber (int);
+        case 2:
+          return 2;
+        default:
+          System.out.println("Damn");
+      }
+    } while ((iLikeLooping (boolean) == true))
+    return a (int);
+  }
   public static void main (method void) () {
-    int aaa (int);
-    aaa (int) = (f (method void) + f (method void));
-    bbb (boolean) = (f (method void) == 3);
-    bbb (boolean) = (f (method void) > main (method void));
-    aaa (int) = (aaa (int) + !(false));
-    aaa (int) = (aaa (int) + "foo");
-    bbb (boolean) = aaa (int);
-    bbb (boolean) = ((aaa (int) + true) && (bbb (boolean) < true));
+    int gimmeNumber (int);
+    int aNumber (int);
+    boolean noIdont (boolean);
+    aNumber (int) = 3;
+    noIdont (boolean) = false;
+    gimmeNumber (int) = timeToSwitch (method int)((3**(3**2)), noIdont (boolean));
+    testMyBool (method void)((aNumber (int) != gimmeNumber (int)));
   }
 }

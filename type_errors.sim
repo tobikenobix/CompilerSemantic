@@ -1,0 +1,65 @@
+// tests for typecheck related errors
+public class test {
+  static boolean bbb;
+  static String s;
+  static int i;
+
+ public static int ff(int input, String testString){
+    int i; // shadowing allowed
+    i = 3;
+    i = true; //failes
+    testString = "hello"; //wrong type
+    return i;
+  }
+
+  public static int funcTwo(){
+    int k;
+    k = ff(i, "hello"); 
+    return 3;
+  }
+
+  public static void funcThree(){
+    int usedInNested;
+    s = "test";
+    usedInNested = 2;
+    {
+      usedInNested = 3;
+    }
+  }
+
+  public static void testSwitch(){
+    int x;
+    switch(x){
+      case 3: System.out.println(x); //working in name analysis, this will break in typecheck
+      default: i = 2;
+    }
+  }
+
+  public static int testReturn(){
+    int k;
+    k = funcThree(); // cant assign void to int
+    if(k<i){
+      return k;
+    }
+  } 
+
+
+  public static int testNoReturn(){
+    int y;
+    y = 3;
+    funcThree(y); //one instead of 0 args
+    return y; 
+  }
+
+public static void main(){
+  int n;
+  int l;
+  boolean b;
+  String word;
+  i = ff(2*3, "hello");
+  i = ff(b, word); //fails because first arg is not int
+  l = ff(i); //fails because only one arg
+}
+
+}
+
