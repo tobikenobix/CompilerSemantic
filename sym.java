@@ -7,7 +7,10 @@
 public class sym {
   /* terminals */
   public static final int DIVIDE = 30;
+  public static final int POWER = 44;
   public static final int EQUALS = 34;
+  public static final int UMINUS = 43;
+  public static final int CASE = 41;
   public static final int GREATER = 37;
   public static final int LPAREN = 22;
   public static final int INT = 5;
@@ -33,12 +36,15 @@ public class sym {
   public static final int error = 1;
   public static final int LCURLY = 20;
   public static final int VOID = 8;
+  public static final int SWITCH = 40;
   public static final int RCURLY = 21;
   public static final int INTLITERAL = 18;
   public static final int TIMES = 29;
+  public static final int COLON = 45;
   public static final int ELSE = 12;
   public static final int NOTEQUALS = 35;
   public static final int WHILE = 13;
+  public static final int DEFAULT = 42;
   public static final int PUBLIC = 2;
   public static final int GREATEREQ = 39;
   public static final int STRING = 7;
@@ -86,7 +92,13 @@ public class sym {
   "LESS",
   "GREATER",
   "LESSEQ",
-  "GREATEREQ"
+  "GREATEREQ",
+  "SWITCH",
+  "CASE",
+  "DEFAULT",
+  "UMINUS",
+  "POWER",
+  "COLON"
   };
 }
 

@@ -1,0 +1,32 @@
+public class soFancy (class) {
+  static int bestNumber (int);
+  static String superString (String);
+  static boolean soMuchTruth (boolean);
+  public static void testMyBool (method void) (boolean b (boolean)) {
+    if ((bestNumber (int) < 3)) {
+      System.out.println("wow that works");
+    }
+  }
+  public static int timeToSwitch (method int) (int a (int), boolean iLikeLooping (boolean)) {
+    do {
+      switch (a (int)) {
+        case 1:
+          return bestNumber (int);
+        case 2:
+          return 2;
+        default:
+          System.out.println("Damn");
+      }
+    } while ((iLikeLooping (boolean) == true))
+    return a (int);
+  }
+  public static void main (method void) () {
+    int gimmeNumber (int);
+    int aNumber (int);
+    boolean noIdont (boolean);
+    aNumber (int) = 3;
+    noIdont (boolean) = false;
+    gimmeNumber (int) = timeToSwitch (method int)((3**(3**2)), noIdont (boolean));
+    testMyBool (method void)((aNumber (int) != gimmeNumber (int)));
+  }
+}

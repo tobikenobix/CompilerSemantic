@@ -25,8 +25,6 @@ public class test {
       x = z;
      case 2:
       x = z * z;
-     case 4:
-      x = z * z * z;
      default:
       x = 0;
       }

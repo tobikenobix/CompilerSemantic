@@ -1,0 +1,52 @@
+// tests for name analyisis related errors
+// this will also fail, since no main methode has been declared
+public class test {
+  static boolean bbb;
+  static String s;
+  static int i;
+  static int s; // not allowed
+
+ public static void ff(int input, String test){
+    int i; // shadowing allowed
+    i = 3;
+    i = true; //failes
+    test = "hello";
+  }
+
+  public static int funcTwo(){
+    int k;
+    k = ff(i, "hello"); //working for name analyisis
+    return 3;
+  }
+
+  public static void funcThree(){
+    int usedInNested;
+    s = "test";
+    usedInNested = 2;
+    {
+      usedInNested = 3;
+    }
+  }
+
+  public static void testSwitch(){
+    int x;
+    switch(x){
+      case 3: System.out.println(x); //working in name analysis, this will break in typecheck
+      default: i = 2;
+    }
+  }
+
+  public static int testReturn(){
+    int k;
+    if(k<i){
+      return k;
+    }
+  } 
+
+//fails because it has no return statement
+  public static int testNoReturn(){
+    int y;
+    y = 3;
+  }
+
+}

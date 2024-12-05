@@ -1,3 +1,41 @@
-// Here you write your extensive test program that must
-// excercise all grammatical concepts defined in simple.grammar
+// a correclty implemented simple program
 
+public class soFancy {
+
+  //declaring static vars for my super fancy programming language
+  static int bestNumber;
+  static String superString;
+  static boolean soMuchTruth;
+
+  //declaring some functions that do some cool stuff
+
+  public static void testMyBool(boolean b){
+    if (bestNumber < 3){
+      System.out.println("wow that works");
+    }
+  }
+
+  public static int timeToSwitch(int a, boolean iLikeLooping){
+    do {
+      switch(a){
+        case 1: return bestNumber;
+        case 2: return 2;
+        default: System.out.println("Damn");
+      }
+    } while (iLikeLooping == true)
+    return a;
+  }
+  
+
+  //in main I call them all
+
+  public static void main(){
+    int gimmeNumber;
+    int aNumber;
+    boolean noIdont;
+    aNumber =3;
+    noIdont = false;
+    gimmeNumber = timeToSwitch(3**3**2, noIdont);
+    testMyBool(aNumber != gimmeNumber);
+  }
+}
